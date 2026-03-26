@@ -1,0 +1,14 @@
+# IntelliJ
+.idea
+*.iml
+
+# Backend (Spring Boot)
+backend/target
+backend/*.class
+
+# Frontend (React)
+frontend/node_modules
+frontend/dist
+
+# OS
+.DS_Store

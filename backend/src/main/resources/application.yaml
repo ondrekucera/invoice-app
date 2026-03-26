@@ -1,0 +1,40 @@
+# =============================================================
+#  Invoice App – Version 1
+#  Databáze: MySQL přes XAMPP
+#  Testování: Postman
+# =============================================================
+
+server:
+  port: 8080
+
+spring:
+
+  # --- MySQL (XAMPP) ---
+  datasource:
+    url: jdbc:mysql://localhost:3306/invoice_app?createDatabaseIfNotExist=true&serverTimezone=Europe/Prague&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # --- JPA / Hibernate ---
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  # --- JSON ---
+  jackson:
+    mapper:
+      accept-case-insensitive-enums: true
+
+# --- Swagger / OpenAPI ---
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
