@@ -1,79 +1,119 @@
-/*  _____ _______         _                      _
- * |_   _|__   __|       | |                    | |
- *   | |    | |_ __   ___| |___      _____  _ __| | __  ___ ____
- *   | |    | | '_ \ / _ \ __\ \ /\ / / _ \| '__| |/ / / __|_  /
- *  _| |_   | | | | |  __/ |_ \ V  V / (_) | |  |   < | (__ / /
- * |_____|  |_|_| |_|\___|\__| \_/\_/ \___/|_|  |_|\_(_)___/___|
- *                                _
- *              ___ ___ ___ _____|_|_ _ _____
- *             | . |  _| -_|     | | | |     |  LICENCE
- *             |  _|_| |___|_|_|_|_|___|_|_|_|
- *             |_|
- *
- *   PROGRAMOVÁNÍ  <>  DESIGN  <>  PRÁCE/PODNIKÁNÍ  <>  HW A SW
- *
- * Tento zdrojový kód je součástí výukových seriálů na
- * IT sociální síti WWW.ITNETWORK.CZ
- *
- * Kód spadá pod licenci prémiového obsahu a vznikl díky podpoře
- * našich členů. Je určen pouze pro osobní užití a nesmí být šířen.
- * Více informací na http://www.itnetwork.cz/licence
- */
-
 import React from "react";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
+import { Eye, Pencil, Trash2, Plus, User } from "lucide-react";
 
-const PersonTable = ({label, items, deletePerson}) => {
+/**
+ * Props:
+ *   items         – aktuálně zobrazená stránka
+ *   deletePerson  – callback pro smazání
+ *   totalFiltered – počet po filtraci (pro info řádek)
+ *   totalAll      – celkový počet bez filtru
+ *   isFiltered    – příznak aktivního filtru
+ */
+const PersonTable = ({ items, deletePerson, totalFiltered, totalAll, isFiltered }) => {
+  const handleDelete = (item) => {
+    if (window.confirm(`Opravdu chcete smazat osobu ${item.name}?`)) {
+      deletePerson(item._id);
+    }
+  };
+
+  if (totalFiltered === 0) {
     return (
-        <div>
-            <p>
-                {label} {items.length}
-            </p>
-
-            <table className="table table-bordered">
-                <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Jméno</th>
-                    <th colSpan={3}>Akce</th>
-                </tr>
-                </thead>
-                <tbody>
-                {items.map((item, index) => (
-                    <tr key={index + 1}>
-                        <td>{index + 1}</td>
-                        <td>{item.name}</td>
-                        <td>
-                            <div className="btn-group">
-                                <Link
-                                    to={"/persons/show/" + item._id}
-                                    className="btn btn-sm btn-info"
-                                >
-                                    Zobrazit
-                                </Link>
-                                <Link
-                                    to={"/persons/edit/" + item._id}
-                                    className="btn btn-sm btn-warning"
-                                >
-                                    Upravit
-                                </Link>
-                                <button
-                                    onClick={() => deletePerson(item._id)}
-                                    className="btn btn-sm btn-danger"
-                                >
-                                    Odstranit
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
-            <Link to={"/persons/create"} className="btn btn-success">
-                Nová osoba
-            </Link>
+      <div className="empty-state">
+        <div className="empty-state-icon">👤</div>
+        <div className="empty-state-title">Žádné osoby</div>
+        <div className="empty-state-sub">
+          {isFiltered
+            ? "Žádná osoba neodpovídá zadanému filtru."
+            : "Zatím nebyly přidány žádné osoby."}
         </div>
+        {!isFiltered && (
+          <div style={{ marginTop: "1.25rem" }}>
+            <Link to="/persons/create" className="btn-primary">
+              <Plus size={14} /> Přidat osobu
+            </Link>
+          </div>
+        )}
+      </div>
     );
+  }
+
+  return (
+    <div>
+      {/* Info řádek */}
+      <div style={{
+        marginBottom: "0.75rem",
+        fontSize: "0.8rem",
+        color: "var(--color-text-muted)",
+        display: "flex",
+        alignItems: "center",
+        gap: "0.35rem",
+      }}>
+        {isFiltered ? (
+          <>
+            Nalezeno{" "}
+            <strong style={{ color: "var(--color-text)" }}>{totalFiltered}</strong>
+            {" z "}{totalAll}
+          </>
+        ) : (
+          <>
+            Celkem{" "}
+            <strong style={{ color: "var(--color-text)" }}>{totalAll}</strong>
+            {" "}osob
+          </>
+        )}
+      </div>
+
+      {/* Seznam */}
+      <div className="invoice-list">
+        {items.map((item) => (
+          <div
+            key={item._id}
+            className="invoice-row"
+            style={{ gridTemplateColumns: "40px 1fr auto" }}
+          >
+            <div className="invoice-num" style={{ display: "flex", alignItems: "center" }}>
+              <User size={14} style={{ opacity: 0.45 }} />
+            </div>
+
+            <div>
+              <div className="invoice-product">{item.name}</div>
+              {item.identificationNumber && (
+                <div style={{
+                  fontSize: "0.78rem",
+                  color: "var(--color-text-dim)",
+                  marginTop: "0.1rem",
+                }}>
+                  IČO: {item.identificationNumber}
+                  {item.city && (
+                    <span style={{ marginLeft: "0.75rem" }}>{item.city}</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="invoice-actions">
+              <Link to={"/persons/show/" + item._id} className="btn-icon info" title="Detail">
+                <Eye size={14} />
+              </Link>
+              <Link to={"/persons/edit/" + item._id} className="btn-icon warning" title="Upravit">
+                <Pencil size={14} />
+              </Link>
+              <button className="btn-icon danger" title="Smazat" onClick={() => handleDelete(item)}>
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: "1rem" }}>
+        <Link to="/persons/create" className="btn-outline">
+          <Plus size={14} /> Nová osoba
+        </Link>
+      </div>
+    </div>
+  );
 };
 
 export default PersonTable;

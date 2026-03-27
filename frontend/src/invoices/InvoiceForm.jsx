@@ -1,201 +1,216 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { Save, ArrowLeft } from "lucide-react";
 import { apiGet, apiPost, apiPut } from "../utils/api";
-import InputField from "../components/InputField";
-import InputSelect from "../components/InputSelect";
-import FlashMessage from "../components/FlashMessage";
 
 const InvoiceForm = () => {
-    const navigate = useNavigate();
-    const { id } = useParams();
-    const isEditing = !!id;
+  const navigate  = useNavigate();
+  const { id }    = useParams();
+  const isEditing = !!id;
 
-    const [persons, setPersons] = useState([]);
-    const [invoice, setInvoice] = useState({
-        invoiceNumber: "",
-        issued: "",
-        dueDate: "",
-        product: "",
-        price: "",
-        vat: "",
-        note: "",
-        buyer: { _id: "" },
-        seller: { _id: "" },
-    });
-    const [sentState, setSent] = useState(false);
-    const [successState, setSuccess] = useState(false);
-    const [errorState, setError] = useState(null);
+  const [persons, setPersons] = useState([]);
+  const [invoice, setInvoice] = useState({
+    invoiceNumber: "",
+    issued: "",
+    dueDate: "",
+    product: "",
+    price: "",
+    vat: "",
+    note: "",
+    buyer:  { _id: "" },
+    seller: { _id: "" },
+  });
+  const [loading,      setLoading]      = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(isEditing);
+  const [error,        setError]        = useState(null);
 
-    useEffect(() => {
-        apiGet("/api/persons").then((data) => setPersons(data));
+  useEffect(() => {
+    apiGet("/api/persons").then(setPersons);
+    if (isEditing) {
+      apiGet("/api/invoices/" + id)
+        .then(data => {
+          setInvoice({
+            ...data,
+            issued:  data.issued  ? data.issued.substring(0, 10)  : "",
+            dueDate: data.dueDate ? data.dueDate.substring(0, 10) : "",
+            buyer:  { _id: data.buyer?._id  || "" },
+            seller: { _id: data.seller?._id || "" },
+          });
+          setFetchLoading(false);
+        })
+        .catch(e => { setError(e.message); setFetchLoading(false); });
+    }
+  }, [id]);
 
-        if (isEditing) {
-            apiGet("/api/invoices/" + id).then((data) => {
-                setInvoice({
-                    ...data,
-                    issued: data.issued ? data.issued.substring(0, 10) : "",
-                    dueDate: data.dueDate ? data.dueDate.substring(0, 10) : "",
-                    buyer: { _id: data.buyer?._id || "" },
-                    seller: { _id: data.seller?._id || "" },
-                });
-            });
-        }
-    }, [id]);
+  /* Funkční update – closure se nevztahuje na zastaralý stav */
+  const handleChange = (field) => (e) => {
+    const value = e.target.value;
+    setInvoice(prev => ({ ...prev, [field]: value }));
+  };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+  const handlePersonChange = (role) => (e) => {
+    const value = e.target.value;
+    setInvoice(prev => ({ ...prev, [role]: { _id: value } }));
+  };
 
-        const request = isEditing
-            ? apiPut("/api/invoices/" + id, invoice)
-            : apiPost("/api/invoices", invoice);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    (isEditing ? apiPut("/api/invoices/" + id, invoice) : apiPost("/api/invoices", invoice))
+      .then(() => navigate("/invoices"))
+      .catch(e => { setError(e.message); setLoading(false); });
+  };
 
-        request
-            .then(() => {
-                setSent(true);
-                setSuccess(true);
-                navigate("/invoices");
-            })
-            .catch((error) => {
-                console.log(error.message);
-                setError(error.message);
-                setSent(true);
-                setSuccess(false);
-            });
-    };
+  if (fetchLoading)
+    return <div className="loading-spinner"><div className="spinner" />Načítám fakturu...</div>;
 
-    return (
-        <div>
-            <h1>{isEditing ? "Upravit fakturu" : "Vytvořit fakturu"}</h1>
-            <hr />
-            {errorState && (
-                <div className="alert alert-danger">{errorState}</div>
-            )}
-            {sentState && (
-                <FlashMessage
-                    theme={successState ? "success" : ""}
-                    text={successState ? "Faktura byla úspěšně uložena." : ""}
-                />
-            )}
-            <form onSubmit={handleSubmit}>
-                <InputField
-                    required={true}
-                    type="number"
-                    name="invoiceNumber"
-                    label="Číslo faktury"
-                    prompt="Zadejte číslo faktury"
-                    value={invoice.invoiceNumber}
-                    handleChange={(e) =>
-                        setInvoice({ ...invoice, invoiceNumber: e.target.value })
-                    }
-                />
-
-                <InputField
-                    required={true}
-                    type="date"
-                    name="issued"
-                    label="Datum vystavení"
-                    value={invoice.issued}
-                    handleChange={(e) =>
-                        setInvoice({ ...invoice, issued: e.target.value })
-                    }
-                />
-
-                <InputField
-                    required={true}
-                    type="date"
-                    name="dueDate"
-                    label="Datum splatnosti"
-                    value={invoice.dueDate}
-                    handleChange={(e) =>
-                        setInvoice({ ...invoice, dueDate: e.target.value })
-                    }
-                />
-
-                <InputField
-                    required={true}
-                    type="text"
-                    name="product"
-                    label="Produkt"
-                    prompt="Zadejte název produktu"
-                    value={invoice.product}
-                    handleChange={(e) =>
-                        setInvoice({ ...invoice, product: e.target.value })
-                    }
-                />
-
-                <InputField
-                    required={true}
-                    type="number"
-                    name="price"
-                    label="Cena (Kč)"
-                    prompt="Zadejte cenu"
-                    value={invoice.price}
-                    handleChange={(e) =>
-                        setInvoice({ ...invoice, price: e.target.value })
-                    }
-                />
-
-                <InputField
-                    required={true}
-                    type="number"
-                    name="vat"
-                    label="DPH (%)"
-                    prompt="Zadejte DPH"
-                    value={invoice.vat}
-                    handleChange={(e) =>
-                        setInvoice({ ...invoice, vat: e.target.value })
-                    }
-                />
-
-                <InputField
-                    type="textarea"
-                    name="note"
-                    label="Poznámka"
-                    value={invoice.note}
-                    handleChange={(e) =>
-                        setInvoice({ ...invoice, note: e.target.value })
-                    }
-                />
-
-                <InputSelect
-                    required={true}
-                    name="seller"
-                    label="Dodavatel"
-                    prompt="Vyberte dodavatele"
-                    items={persons}
-                    value={invoice.seller._id}
-                    handleChange={(e) =>
-                        setInvoice({
-                            ...invoice,
-                            seller: { _id: e.target.value },
-                        })
-                    }
-                />
-
-                <InputSelect
-                    required={true}
-                    name="buyer"
-                    label="Odběratel"
-                    prompt="Vyberte odběratele"
-                    items={persons}
-                    value={invoice.buyer._id}
-                    handleChange={(e) =>
-                        setInvoice({
-                            ...invoice,
-                            buyer: { _id: e.target.value },
-                        })
-                    }
-                />
-
-                <input
-                    type="submit"
-                    className="btn btn-primary mt-2"
-                    value="Uložit"
-                />
-            </form>
+  return (
+    <div>
+      <div className="page-header">
+        <div className="page-header-left">
+          <div className="page-eyebrow">Faktura</div>
+          <h1 className="page-title">{isEditing ? "Upravit fakturu" : "Nová faktura"}</h1>
         </div>
-    );
+        <Link to="/invoices" className="btn-outline">
+          <ArrowLeft size={14} /> Zpět
+        </Link>
+      </div>
+
+      {error && <div className="alert alert-danger">{error}</div>}
+
+      <div className="form-card">
+        <form onSubmit={handleSubmit}>
+          {/* Základní informace */}
+          <div className="form-section-label">Základní informace</div>
+          <div className="form-grid">
+            <div className="form-group">
+              <label className="form-label">Číslo faktury *</label>
+              <input
+                className="form-input"
+                type="number"
+                required
+                placeholder="2024001"
+                value={invoice.invoiceNumber}
+                onChange={handleChange("invoiceNumber")}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Produkt *</label>
+              <input
+                className="form-input"
+                type="text"
+                required
+                placeholder="Název produktu nebo služby"
+                value={invoice.product}
+                onChange={handleChange("product")}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Datum vystavení *</label>
+              <input
+                className="form-input"
+                type="date"
+                required
+                value={invoice.issued}
+                onChange={handleChange("issued")}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Datum splatnosti *</label>
+              <input
+                className="form-input"
+                type="date"
+                required
+                value={invoice.dueDate}
+                onChange={handleChange("dueDate")}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Cena (Kč) *</label>
+              <input
+                className="form-input"
+                type="number"
+                required
+                min="0"
+                placeholder="0"
+                value={invoice.price}
+                onChange={handleChange("price")}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">DPH (%) *</label>
+              <input
+                className="form-input"
+                type="number"
+                required
+                min="0"
+                max="100"
+                placeholder="21"
+                value={invoice.vat}
+                onChange={handleChange("vat")}
+              />
+            </div>
+          </div>
+
+          {/* Smluvní strany */}
+          <div className="form-section-label" style={{ marginTop: "0.75rem" }}>Smluvní strany</div>
+          <div className="form-grid">
+            <div className="form-group">
+              <label className="form-label">Dodavatel (prodávající) *</label>
+              <select
+                className="form-input"
+                required
+                value={invoice.seller._id}
+                onChange={handlePersonChange("seller")}
+              >
+                <option value="">— Vyberte dodavatele —</option>
+                {persons.map(p => (
+                  <option key={p._id} value={p._id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Odběratel (kupující) *</label>
+              <select
+                className="form-input"
+                required
+                value={invoice.buyer._id}
+                onChange={handlePersonChange("buyer")}
+              >
+                <option value="">— Vyberte odběratele —</option>
+                {persons.map(p => (
+                  <option key={p._id} value={p._id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Poznámka */}
+          <div className="form-section-label" style={{ marginTop: "0.75rem" }}>Doplňující informace</div>
+          <div className="form-group">
+            <label className="form-label">Poznámka</label>
+            <textarea
+              className="form-input"
+              rows={3}
+              style={{ resize: "vertical" }}
+              placeholder="Nepovinná poznámka k faktuře..."
+              value={invoice.note || ""}
+              onChange={handleChange("note")}
+            />
+          </div>
+
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <button type="submit" className="btn-primary" disabled={loading}>
+              <Save size={15} />
+              {loading ? "Ukládám..." : "Uložit fakturu"}
+            </button>
+            <Link to="/invoices" className="btn-outline">Zrušit</Link>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 export default InvoiceForm;

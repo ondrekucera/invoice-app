@@ -1,13 +1,142 @@
-# Invoice App – Verze 3 (Full-Stack)
+# 🟣 Okvion — Invoice Management App
 
-Jednoduchá CRUD aplikace pro správu osob a faktur (fakturační systém).
+![Java](https://img.shields.io/badge/Java-17-orange?style=flat-square&logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=flat-square&logo=springboot)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)
+![Vite](https://img.shields.io/badge/Vite-Dev_Server-646CFF?style=flat-square&logo=vite)
+![MySQL](https://img.shields.io/badge/MySQL-XAMPP-4479A1?style=flat-square&logo=mysql)
 
-| Vrstva    | Technologie                      |
-|-----------|----------------------------------|
-| Backend   | Java 17 · Spring Boot 3 · Maven  |
-| Databáze  | MySQL přes XAMPP (port 3306)     |
-| Frontend  | React · Vite (port 3000)         |
-| Testování | Postman + prohlížeč              |
+> Fullstack CRUD aplikace pro správu faktur a obchodních kontaktů.  
+> REST API (Spring Boot) · React dashboard · Dark mode · Stránkování · Filtrování
+
+---
+
+## 📋 O projektu
+
+**Okvion** je fullstack webová aplikace pro evidenci faktur a obchodních kontaktů.
+Pokrývá celý fakturační proces — vytvoření faktury, správu dodavatelů a odběratelů až po přehledné statistiky.
+
+Vznikla jako portfoliový projekt v rámci kurzu JAVA PRO developer na [ITnetwork.cz](https://www.itnetwork.cz) — frontend a UI byly výrazně rozšířeny nad rámec zadání.
+
+---
+
+## 🖼️ Náhled aplikace
+
+| | |
+|---|---|
+| 📊 **Dashboard** | *Přehled statistik, rychlé akce, poslední faktury* |
+| 🧾 **Seznam faktur** | *Přepínání Všechny / Vystavené / Přijaté, filtrace, stránkování* |
+| ✏️ **Formulář faktury** | *Vytvoření a úprava faktury, výběr smluvních stran* |
+| 🌙 **Dark / Light mode** | *Přepínání barevného schématu, dark jako výchozí* |
+
+> 📸 *Screenshoty doplňte po nasazení nebo spuštění aplikace*
+
+---
+
+## 🚀 Funkce aplikace
+
+### 👤 Osoby
+- ✅ Vytvoření, úprava a smazání osoby nebo firmy
+- ✅ Detail s kompletními údaji (IČO, DIČ, bankovní účet, adresa, kontakt)
+- ✅ Filtrování podle jména, IČO nebo města
+
+### 🧾 Faktury
+- ✅ Vytvoření, úprava a smazání faktury
+- ✅ Přiřazení dodavatele a odběratele ze seznamu osob
+- ✅ Detail s automatickým výpočtem ceny včetně DPH
+- ✅ Filtrace podle produktu, minimální a maximální ceny
+- ✅ Přepínání pohledů: **Všechny / Vystavené / Přijaté** s výběrem osoby
+
+### 📊 Statistiky
+- ✅ Přehledné KPI v reálném čase: počet faktur, celková a průměrná hodnota
+- ✅ Data se načítají přímo z backendu při každém zobrazení
+
+### 🎨 UI / UX
+- ✅ Dashboard s přehledem a rychlými akcemi na úvodní stránce
+- ✅ **Dark mode** jako výchozí, přepínatelný Light mode (persistuje v localStorage)
+- ✅ Fixní sidebar navigace — sbalitelný na desktopu, drawer na mobilech
+- ✅ Stránkování — 10 / 25 / 50 položek na stránku s automatickou korekcí
+- ✅ Responzivní design: desktop, tablet, mobil
+- ✅ Loading stavy, error handling, prázdné stavy s výzvou k akci
+
+---
+
+## 🛠️ Použité technologie
+
+### Backend
+| Technologie | Verze | Účel |
+|---|---|---|
+| Java | 17 | Programovací jazyk |
+| Spring Boot | 3.x | Aplikační framework |
+| Spring Data JPA / Hibernate | — | ORM a správa databáze |
+| MapStruct | — | Mapování Entity ↔ DTO |
+| Lombok | — | Redukce boilerplate kódu |
+| Bean Validation | — | Validace vstupních dat |
+| Maven | — | Build a správa závislostí |
+
+### Frontend
+| Technologie | Verze | Účel |
+|---|---|---|
+| React | 18 | UI framework |
+| React Router | v6 | Klientské routování (SPA) |
+| Lucide React | — | Ikony |
+| CSS (vlastní design systém) | — | CSS proměnné, dark/light mode, responzivita |
+| Vite | — | Build tool a dev server |
+
+### Databáze a nástroje
+| Technologie | Účel |
+|---|---|
+| MySQL (XAMPP) | Relační databáze |
+| Git / GitHub | Verzování a správa kódu |
+
+---
+
+## ⚙️ Spuštění projektu
+
+### Požadavky
+- Java 17+
+- Node.js 18+
+- XAMPP (MySQL)
+- IntelliJ IDEA (backend) / VS Code (frontend)
+
+---
+
+### 1. Databáze
+
+1. Spusť XAMPP → nastartuj **Apache** + **MySQL**
+2. Otevři phpMyAdmin: `http://localhost/phpmyadmin`
+3. Vytvoř databázi `invoice`
+4. Tabulky se vygenerují automaticky při prvním spuštění backendu (Hibernate DDL auto)
+
+---
+
+### 2. Backend
+
+```bash
+cd invoice-app/backend
+```
+
+Zkontroluj přihlašovací údaje v `src/main/resources/application.yaml`, pak spusť:
+
+```bash
+./mvnw spring-boot:run
+```
+
+> Backend běží na **`http://localhost:8080`**
+
+---
+
+### 3. Frontend
+
+```bash
+cd invoice-app/frontend
+npm install
+npm run dev
+```
+
+> Frontend běží na **`http://localhost:5173`**
+
+> ⚠️ Backend musí být spuštěný dříve než frontend — jinak API volání selžou.
 
 ---
 
@@ -15,210 +144,67 @@ Jednoduchá CRUD aplikace pro správu osob a faktur (fakturační systém).
 
 ```
 invoice-app/
-├── backend/          ← Spring Boot aplikace (MySQL + REST API)
-├── frontend/         ← React aplikace (Vite)
-└── README.md
+├── backend/
+│   └── src/main/java/cz/itnetwork/
+│       ├── controller/        # REST controllery
+│       ├── service/           # Business logika (rozhraní + implementace)
+│       ├── entity/            # JPA entity
+│       │   └── repository/    # Spring Data repozitáře + JPA Specification
+│       ├── dto/               # Data Transfer Objects
+│       │   └── mapper/        # MapStruct mappery
+│       └── constant/          # Výčtové typy (Countries)
+│
+└── frontend/
+    └── src/
+        ├── pages/             # Stránky (Dashboard)
+        ├── persons/           # Správa osob
+        ├── invoices/          # Správa faktur
+        ├── components/        # Sdílené komponenty (Pagination, usePagination hook)
+        ├── utils/             # API komunikace
+        └── index.css          # Design systém (CSS proměnné, dark/light mode, layout)
 ```
 
 ---
 
-## 🚀 Spuštění krok za krokem
+## 📌 Historie verzí
 
-### 1. Databáze – spusť MySQL v XAMPP
-
-1. Otevři **XAMPP Control Panel**
-2. Klikni **Start** u řádku **MySQL**
-3. MySQL poběží na `localhost:3306`
-4. Databáze `invoice_app` se vytvoří **automaticky** při prvním spuštění backendu
-
-> ⚠️ XAMPP MySQL musí běžet **před** spuštěním backendu.
-
----
-
-### 2. Backend – spusť Spring Boot (port 8080)
-
-**Předpoklady:** Java 17+, Maven 3.6+
-
-```bash
-cd backend
-mvn spring-boot:run
-```
-
-Nebo v IDE (IntelliJ / Eclipse):
-- Otevři projekt ze složky `backend/`
-- Spusť třídu `ApplicationMain.java`
-
-**Ověření:** Otevři v prohlížeči → [http://localhost:8080/api/persons](http://localhost:8080/api/persons)
-Měl by se vrátit prázdný JSON array `[]`.
-
-**Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+| Verze | Co přibylo |
+|---|---|
+| **V1** | Základ projektu, CRUD pro osoby |
+| **V2** | CRUD pro faktury, vystavené a přijaté faktury |
+| **V3** | Edit a delete pro osoby, statistiky na backendu |
+| **V4** | Dashboard UI, sidebar, dark mode, filtrace faktur |
+| **V4.1** | Filtrace přes JPA Specification, filter bar na frontendu |
+| **V4.2** | Sidebar collapse, mobilní drawer, branding Okvion |
+| **V4.3** | Oprava ztráty focusu ve formulářích, filtr osob |
+| **V4.4** | UX Vystavené/Přijaté, centrování formulářů, finální branding |
+| **V4.5** | Frontend pagination — 10 / 25 / 50 položek na stránku |
+| **V4.5.1** | Fix edge case: korekce stránky po smazání záznamu |
 
 ---
 
-### 3. Frontend – spusť React aplikaci (port 3000)
+## 🎯 Cíl projektu
 
-**Předpoklady:** Node.js 18+, npm
+Projekt demonstruje schopnost navrhnout a dokončit kompletní fullstack aplikaci od databázové vrstvy přes REST API až po moderní React frontend.
 
-```bash
-cd frontend
-npm install
-npm start
-```
-
-Aplikace se otevře na: [http://localhost:3000](http://localhost:3000)
-
-> Frontend volá API na `http://localhost:8080/api/persons` a `http://localhost:8080/api/invoices` – backend musí běžet.
+**Konkrétně ukazuje:**
+- Návrh REST API a vrstvené architektury (Controller → Service → Repository)
+- Práci s JPA/Hibernate a dynamické filtrování přes JPA Specification
+- Mapování dat přes MapStruct (Entity ↔ DTO)
+- Stavové řízení v Reactu — useState, useEffect, useMemo, vlastní hooky
+- Tvorbu vlastního design systému s podporou dark/light mode
+- Verzování projektu a iterativní vývoj přes Git
 
 ---
 
-## 🧪 Testování
+## 📬 Autor
 
-### Přes prohlížeč
-Otevři [http://localhost:3000](http://localhost:3000) a používej React UI.
+**Ondřej Kučera**
 
-### Přes Postman
-
-#### Osoby
-
-| Metoda   | URL                                    | Popis                  |
-|----------|----------------------------------------|------------------------|
-| `GET`    | `http://localhost:8080/api/persons`    | Seznam všech osob      |
-| `GET`    | `http://localhost:8080/api/persons/1`  | Detail osoby (ID = 1)  |
-| `POST`   | `http://localhost:8080/api/persons`    | Vytvoření nové osoby   |
-| `PUT`    | `http://localhost:8080/api/persons/1`  | Úprava osoby (ID = 1)  |
-| `DELETE` | `http://localhost:8080/api/persons/1`  | Smazání osoby (ID = 1) |
-
-**Příklad POST těla (JSON):**
-```json
-{
-  "name": "Jan Novák",
-  "identificationNumber": "12345678",
-  "taxNumber": "CZ12345678",
-  "telephone": "+420 777 000 000",
-  "mail": "jan.novak@example.cz",
-  "street": "Hlavní 1",
-  "zip": "110 00",
-  "city": "Praha",
-  "country": "CZECHIA"
-}
-```
-
-#### Faktury
-
-| Metoda   | URL                                                        | Popis                           |
-|----------|------------------------------------------------------------|---------------------------------|
-| `GET`    | `http://localhost:8080/api/invoices`                       | Seznam všech faktur             |
-| `GET`    | `http://localhost:8080/api/invoices/1`                     | Detail faktury (ID = 1)         |
-| `POST`   | `http://localhost:8080/api/invoices`                       | Vytvoření nové faktury          |
-| `PUT`    | `http://localhost:8080/api/invoices/1`                     | Úprava faktury (ID = 1)         |
-| `DELETE` | `http://localhost:8080/api/invoices/1`                     | Smazání faktury (ID = 1)        |
-| `GET`    | `http://localhost:8080/api/invoices/sales/{personId}`      | Vystavené faktury osoby         |
-| `GET`    | `http://localhost:8080/api/invoices/purchases/{personId}`  | Přijaté faktury osoby           |
-| `GET`    | `http://localhost:8080/api/invoices/statistics`            | Statistiky faktur               |
-
-**Příklad POST těla (JSON):**
-```json
-{
-  "invoiceNumber": 1001,
-  "issued": "2026-03-27",
-  "dueDate": "2026-04-10",
-  "product": "Webové služby",
-  "price": 15000,
-  "vat": 21,
-  "note": "Test faktura",
-  "buyer": { "_id": 1 },
-  "seller": { "_id": 2 }
-}
-```
+> Portfoliový projekt | Kurz JAVA PRO developer — [ITnetwork.cz](https://www.itnetwork.cz)
 
 ---
 
-## ⚙️ Konfigurace databáze
-
-Soubor: `backend/src/main/resources/application.yaml`
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/invoice_app?createDatabaseIfNotExist=true
-    username: root
-    password:          # výchozí XAMPP heslo je prázdné
-```
-
-Pokud máš nastavené jiné heslo pro MySQL, uprav pole `password`.
-
----
-
-## 🔌 REST API endpointy
-
-#### Osoby
-
-```
-GET    /api/persons        → seznam všech osob (hidden=false)
-GET    /api/persons/{id}   → detail osoby
-POST   /api/persons        → vytvoření osoby  (201 Created)
-PUT    /api/persons/{id}   → úprava osoby
-DELETE /api/persons/{id}   → soft-delete (hidden=true, 204 No Content)
-```
-
-#### Faktury
-
-```
-GET    /api/invoices                        → seznam všech faktur
-GET    /api/invoices/{id}                   → detail faktury
-POST   /api/invoices                        → vytvoření faktury  (201 Created)
-PUT    /api/invoices/{id}                   → úprava faktury
-DELETE /api/invoices/{id}                   → smazání faktury (204 No Content)
-GET    /api/invoices/sales/{personId}       → vystavené faktury osoby
-GET    /api/invoices/purchases/{personId}   → přijaté faktury osoby
-GET    /api/invoices/statistics             → statistiky faktur
-```
-
----
-
-## 🗂️ Funkcionalita
-
-### Osoby
-- Vytvoření, seznam, detail, úprava, smazání osoby
-- Soft-delete: osoba se označí jako `hidden=true`, v databázi zůstane
-
-### Faktury
-- **Vytvoření** – nová faktura s vazbou na kupujícího a prodávajícího
-- **Seznam** – přehled všech faktur
-- **Detail** – zobrazení konkrétní faktury
-- **Úprava** – editace existující faktury
-- **Smazání** – odstranění faktury z databáze
-- **Vystavené** – faktury, kde je osoba prodávající (`seller`)
-- **Přijaté** – faktury, kde je osoba kupující (`buyer`)
-- **Statistiky** – přehled souhrnných dat faktur:
-  - počet faktur
-  - celková částka všech faktur
-  - průměrná hodnota faktury
-
----
-
-## 🔗 Relace
-
-- Každá faktura obsahuje vazbu na dvě osoby:
-  - **`buyer`** – kupující (odkaz na osobu)
-  - **`seller`** – prodávající (odkaz na osobu)
-- Obě vazby jsou povinné při vytváření faktury
-
----
-
-## 📦 Technické detaily
-
-- **Soft-delete (osoby):** Smazaná osoba se označí jako `hidden=true`, ale v databázi zůstane
-- **CORS:** Povoleno pro všechny originy (vhodné pro lokální vývoj)
-- **Tabulky:** Vytváří se automaticky (`ddl-auto: update`)
-- **Port backendu:** 8080
-- **Port frontendu:** 3000 (Vite výchozí)
-
----
-
-## 🧠 Použité principy
-
-- REST API design
-- DTO + Mapper (MapStruct)
-- Separation of Concerns (Controller / Service / Repository)
-- Relace mezi entitami (JPA)
+<div align="center">
+  <sub>🟣 Okvion v4.5.1 &nbsp;·&nbsp; Java 17 + Spring Boot + React + Vite</sub>
+</div>

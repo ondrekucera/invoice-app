@@ -1,14 +1,18 @@
 package cz.itnetwork.service;
 
 import cz.itnetwork.dto.InvoiceDTO;
+import cz.itnetwork.dto.InvoiceFilterDTO;
 import cz.itnetwork.dto.StatisticsDTO;
 import cz.itnetwork.dto.mapper.InvoiceMapper;
 import cz.itnetwork.entity.InvoiceEntity;
 import cz.itnetwork.entity.PersonEntity;
 import cz.itnetwork.entity.repository.InvoiceRepository;
+import cz.itnetwork.entity.repository.InvoiceSpecification;
 import cz.itnetwork.entity.repository.PersonRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -51,9 +55,17 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
-    public List<InvoiceDTO> getAll() {
-        return invoiceRepository.findAll()
-                .stream()
+    public List<InvoiceDTO> getAll(InvoiceFilterDTO filter) {
+        Specification<InvoiceEntity> spec = InvoiceSpecification.filterBy(filter);
+
+        List<InvoiceEntity> result;
+        if (filter != null && filter.getLimit() != null && filter.getLimit() > 0) {
+            result = invoiceRepository.findAll(spec, PageRequest.of(0, filter.getLimit())).getContent();
+        } else {
+            result = invoiceRepository.findAll(spec);
+        }
+
+        return result.stream()
                 .map(invoiceMapper::toDTO)
                 .collect(Collectors.toList());
     }
