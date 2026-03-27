@@ -5,10 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-/**
- * JPA entita – tabulka "person" v MySQL (XAMPP).
- * Tabulka se vytvoří automaticky díky ddl-auto=update.
- */
+import java.util.List;
+
 @Entity
 @Table(name = "person")
 @Getter
@@ -48,7 +46,12 @@ public class PersonEntity {
 
     private String note;
 
-    /** Soft-delete příznak – skrytá osoba se nevrací v listingu */
     @Column(nullable = false)
     private boolean hidden = false;
+
+    @OneToMany(mappedBy = "buyer")
+    private List<InvoiceEntity> purchases;
+
+    @OneToMany(mappedBy = "seller")
+    private List<InvoiceEntity> sales;
 }

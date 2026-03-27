@@ -1,6 +1,6 @@
-# Invoice App – Verze 1 (Full-Stack)
+# Invoice App – Verze 2 (Full-Stack)
 
-Jednoduchá CRUD aplikace pro správu osob (fakturační systém).
+Jednoduchá CRUD aplikace pro správu osob a faktur (fakturační systém).
 
 | Vrstva    | Technologie                      |
 |-----------|----------------------------------|
@@ -67,7 +67,7 @@ npm start
 
 Aplikace se otevře na: [http://localhost:3000](http://localhost:3000)
 
-> Frontend volá API na `http://localhost:8080/api/persons` – backend musí běžet.
+> Frontend volá API na `http://localhost:8080/api/persons` a `http://localhost:8080/api/invoices` – backend musí běžet.
 
 ---
 
@@ -77,6 +77,8 @@ Aplikace se otevře na: [http://localhost:3000](http://localhost:3000)
 Otevři [http://localhost:3000](http://localhost:3000) a používej React UI.
 
 ### Přes Postman
+
+#### Osoby
 
 | Metoda   | URL                                    | Popis                  |
 |----------|----------------------------------------|------------------------|
@@ -101,6 +103,33 @@ Otevři [http://localhost:3000](http://localhost:3000) a používej React UI.
 }
 ```
 
+#### Faktury
+
+| Metoda   | URL                                                        | Popis                           |
+|----------|------------------------------------------------------------|---------------------------------|
+| `GET`    | `http://localhost:8080/api/invoices`                       | Seznam všech faktur             |
+| `GET`    | `http://localhost:8080/api/invoices/1`                     | Detail faktury (ID = 1)         |
+| `POST`   | `http://localhost:8080/api/invoices`                       | Vytvoření nové faktury          |
+| `PUT`    | `http://localhost:8080/api/invoices/1`                     | Úprava faktury (ID = 1)         |
+| `DELETE` | `http://localhost:8080/api/invoices/1`                     | Smazání faktury (ID = 1)        |
+| `GET`    | `http://localhost:8080/api/invoices/sales/{personId}`      | Vystavené faktury osoby         |
+| `GET`    | `http://localhost:8080/api/invoices/purchases/{personId}`  | Přijaté faktury osoby           |
+
+**Příklad POST těla (JSON):**
+```json
+{
+  "invoiceNumber": 1001,
+  "issued": "2026-03-27",
+  "dueDate": "2026-04-10",
+  "product": "Webové služby",
+  "price": 15000,
+  "vat": 21,
+  "note": "Test faktura",
+  "buyer": { "_id": 1 },
+  "seller": { "_id": 2 }
+}
+```
+
 ---
 
 ## ⚙️ Konfigurace databáze
@@ -121,6 +150,8 @@ Pokud máš nastavené jiné heslo pro MySQL, uprav pole `password`.
 
 ## 🔌 REST API endpointy
 
+#### Osoby
+
 ```
 GET    /api/persons        → seznam všech osob (hidden=false)
 GET    /api/persons/{id}   → detail osoby
@@ -129,12 +160,59 @@ PUT    /api/persons/{id}   → úprava osoby
 DELETE /api/persons/{id}   → soft-delete (hidden=true, 204 No Content)
 ```
 
+#### Faktury
+
+```
+GET    /api/invoices                        → seznam všech faktur
+GET    /api/invoices/{id}                   → detail faktury
+POST   /api/invoices                        → vytvoření faktury  (201 Created)
+PUT    /api/invoices/{id}                   → úprava faktury
+DELETE /api/invoices/{id}                   → smazání faktury (204 No Content)
+GET    /api/invoices/sales/{personId}       → vystavené faktury osoby
+GET    /api/invoices/purchases/{personId}   → přijaté faktury osoby
+```
+
+---
+
+## 🗂️ Funkcionalita
+
+### Osoby
+- Vytvoření, seznam, detail, úprava, smazání osoby
+- Soft-delete: osoba se označí jako `hidden=true`, v databázi zůstane
+
+### Faktury
+- **Vytvoření** – nová faktura s vazbou na kupujícího a prodávajícího
+- **Seznam** – přehled všech faktur
+- **Detail** – zobrazení konkrétní faktury
+- **Úprava** – editace existující faktury
+- **Smazání** – odstranění faktury z databáze
+- **Vystavené** – faktury, kde je osoba prodávající (`seller`)
+- **Přijaté** – faktury, kde je osoba kupující (`buyer`)
+
+---
+
+## 🔗 Relace
+
+- Každá faktura obsahuje vazbu na dvě osoby:
+  - **`buyer`** – kupující (odkaz na osobu)
+  - **`seller`** – prodávající (odkaz na osobu)
+- Obě vazby jsou povinné při vytváření faktury
+
 ---
 
 ## 📦 Technické detaily
 
-- **Soft-delete:** Smazaná osoba se označí jako `hidden=true`, ale v databázi zůstane
+- **Soft-delete (osoby):** Smazaná osoba se označí jako `hidden=true`, ale v databázi zůstane
 - **CORS:** Povoleno pro všechny originy (vhodné pro lokální vývoj)
 - **Tabulky:** Vytváří se automaticky (`ddl-auto: update`)
 - **Port backendu:** 8080
 - **Port frontendu:** 3000 (Vite výchozí)
+
+---
+
+## 🧠 Použité principy
+
+- REST API design
+- DTO + Mapper (MapStruct)
+- Separation of Concerns (Controller / Service / Repository)
+- Relace mezi entitami (JPA)

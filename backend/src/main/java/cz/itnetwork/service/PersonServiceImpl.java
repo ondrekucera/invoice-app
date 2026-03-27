@@ -34,7 +34,6 @@ public class PersonServiceImpl implements PersonService {
             person.setHidden(true);
             personRepository.save(person);
         } catch (EntityNotFoundException ignored) {
-            // Dle kontraktu – žádná výjimka, pokud osoba neexistuje
         }
     }
 
@@ -53,21 +52,18 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public PersonDTO updatePerson(long id, PersonDTO personDTO) {
-        fetchPersonById(id); // ověření existence
+        PersonEntity existing = fetchPersonById(id);
 
         PersonEntity updated = personMapper.toEntity(personDTO);
         updated.setId(id);
+        updated.setHidden(existing.isHidden());
         updated = personRepository.save(updated);
 
         return personMapper.toDTO(updated);
     }
 
-    // region: Private helpers
-
     private PersonEntity fetchPersonById(long id) {
         return personRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Osoba s id " + id + " nebyla nalezena."));
     }
-
-    // endregion
 }

@@ -6,10 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO používané v REST API (Postman).
- * Pole "_id" odpovídá databázovému id osoby.
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
