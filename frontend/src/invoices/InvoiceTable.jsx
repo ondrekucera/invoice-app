@@ -2,8 +2,17 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 import { dateStringFormatter } from "../utils/dateStringFormatter";
+import { apiDelete } from "../utils/api";
 
-const InvoiceTable = ({ label, items }) => {
+const InvoiceTable = ({ label, items, onDelete }) => {
+    const handleDelete = (id) => {
+        if (window.confirm("Opravdu chcete smazat tuto fakturu?")) {
+            apiDelete("/api/invoices/" + id).then(() => {
+                if (onDelete) onDelete();
+            });
+        }
+    };
+
     return (
         <div>
             <p>
@@ -46,10 +55,22 @@ const InvoiceTable = ({ label, items }) => {
                             <td>
                                 <Link
                                     to={"/invoices/show/" + item._id}
-                                    className="btn btn-sm btn-info"
+                                    className="btn btn-sm btn-info me-1"
                                 >
                                     Zobrazit
                                 </Link>
+                                <Link
+                                    to={"/invoices/edit/" + item._id}
+                                    className="btn btn-sm btn-warning me-1"
+                                >
+                                    Upravit
+                                </Link>
+                                <button
+                                    className="btn btn-sm btn-danger"
+                                    onClick={() => handleDelete(item._id)}
+                                >
+                                    Smazat
+                                </button>
                             </td>
                         </tr>
                     ))}

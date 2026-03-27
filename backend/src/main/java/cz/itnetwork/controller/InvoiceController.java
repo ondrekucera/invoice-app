@@ -1,6 +1,7 @@
 package cz.itnetwork.controller;
 
 import cz.itnetwork.dto.InvoiceDTO;
+import cz.itnetwork.dto.StatisticsDTO;
 import cz.itnetwork.service.InvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,11 @@ public class InvoiceController {
     @GetMapping
     public List<InvoiceDTO> getInvoices() {
         return invoiceService.getAll();
+    }
+
+    @GetMapping("/statistics")
+    public StatisticsDTO getStatistics() {
+        return invoiceService.getStatistics();
     }
 
     @GetMapping("/{id}")

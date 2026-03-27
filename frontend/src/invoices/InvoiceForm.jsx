@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-import { apiGet, apiPost } from "../utils/api";
+import { apiGet, apiPost, apiPut } from "../utils/api";
 import InputField from "../components/InputField";
 import InputSelect from "../components/InputSelect";
 import FlashMessage from "../components/FlashMessage";
 
 const InvoiceForm = () => {
     const navigate = useNavigate();
+    const { id } = useParams();
+    const isEditing = !!id;
+
     const [persons, setPersons] = useState([]);
     const [invoice, setInvoice] = useState({
         invoiceNumber: "",
@@ -26,12 +29,28 @@ const InvoiceForm = () => {
 
     useEffect(() => {
         apiGet("/api/persons").then((data) => setPersons(data));
-    }, []);
+
+        if (isEditing) {
+            apiGet("/api/invoices/" + id).then((data) => {
+                setInvoice({
+                    ...data,
+                    issued: data.issued ? data.issued.substring(0, 10) : "",
+                    dueDate: data.dueDate ? data.dueDate.substring(0, 10) : "",
+                    buyer: { _id: data.buyer?._id || "" },
+                    seller: { _id: data.seller?._id || "" },
+                });
+            });
+        }
+    }, [id]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        apiPost("/api/invoices", invoice)
+        const request = isEditing
+            ? apiPut("/api/invoices/" + id, invoice)
+            : apiPost("/api/invoices", invoice);
+
+        request
             .then(() => {
                 setSent(true);
                 setSuccess(true);
@@ -47,7 +66,7 @@ const InvoiceForm = () => {
 
     return (
         <div>
-            <h1>Vytvořit fakturu</h1>
+            <h1>{isEditing ? "Upravit fakturu" : "Vytvořit fakturu"}</h1>
             <hr />
             {errorState && (
                 <div className="alert alert-danger">{errorState}</div>

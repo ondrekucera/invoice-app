@@ -14,7 +14,7 @@ const InvoiceIndex = ({ type }) => {
         return "Seznam faktur";
     };
 
-    useEffect(() => {
+    const loadInvoices = () => {
         let url = "/api/invoices";
         if (personId && type === "sales") {
             url = "/api/invoices/sales/" + personId;
@@ -22,6 +22,10 @@ const InvoiceIndex = ({ type }) => {
             url = "/api/invoices/purchases/" + personId;
         }
         apiGet(url).then((data) => setInvoices(data));
+    };
+
+    useEffect(() => {
+        loadInvoices();
     }, [personId, type]);
 
     return (
@@ -30,6 +34,7 @@ const InvoiceIndex = ({ type }) => {
             <InvoiceTable
                 items={invoices}
                 label="Počet faktur:"
+                onDelete={loadInvoices}
             />
         </div>
     );

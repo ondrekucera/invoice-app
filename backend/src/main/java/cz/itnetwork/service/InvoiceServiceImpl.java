@@ -1,6 +1,7 @@
 package cz.itnetwork.service;
 
 import cz.itnetwork.dto.InvoiceDTO;
+import cz.itnetwork.dto.StatisticsDTO;
 import cz.itnetwork.dto.mapper.InvoiceMapper;
 import cz.itnetwork.entity.InvoiceEntity;
 import cz.itnetwork.entity.PersonEntity;
@@ -108,5 +109,14 @@ public class InvoiceServiceImpl implements InvoiceService {
     private InvoiceEntity fetchInvoiceById(long id) {
         return invoiceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Faktura s id " + id + " nebyla nalezena."));
+    }
+
+    @Override
+    public StatisticsDTO getStatistics() {
+        List<InvoiceEntity> all = invoiceRepository.findAll();
+        long count = all.size();
+        long sum = all.stream().mapToLong(InvoiceEntity::getPrice).sum();
+        long average = count > 0 ? sum / count : 0;
+        return new StatisticsDTO(count, sum, average);
     }
 }

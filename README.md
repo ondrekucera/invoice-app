@@ -1,4 +1,4 @@
-# Invoice App – Verze 2 (Full-Stack)
+# Invoice App – Verze 3 (Full-Stack)
 
 Jednoduchá CRUD aplikace pro správu osob a faktur (fakturační systém).
 
@@ -114,6 +114,7 @@ Otevři [http://localhost:3000](http://localhost:3000) a používej React UI.
 | `DELETE` | `http://localhost:8080/api/invoices/1`                     | Smazání faktury (ID = 1)        |
 | `GET`    | `http://localhost:8080/api/invoices/sales/{personId}`      | Vystavené faktury osoby         |
 | `GET`    | `http://localhost:8080/api/invoices/purchases/{personId}`  | Přijaté faktury osoby           |
+| `GET`    | `http://localhost:8080/api/invoices/statistics`            | Statistiky faktur               |
 
 **Příklad POST těla (JSON):**
 ```json
@@ -170,6 +171,7 @@ PUT    /api/invoices/{id}                   → úprava faktury
 DELETE /api/invoices/{id}                   → smazání faktury (204 No Content)
 GET    /api/invoices/sales/{personId}       → vystavené faktury osoby
 GET    /api/invoices/purchases/{personId}   → přijaté faktury osoby
+GET    /api/invoices/statistics             → statistiky faktur
 ```
 
 ---
@@ -188,6 +190,10 @@ GET    /api/invoices/purchases/{personId}   → přijaté faktury osoby
 - **Smazání** – odstranění faktury z databáze
 - **Vystavené** – faktury, kde je osoba prodávající (`seller`)
 - **Přijaté** – faktury, kde je osoba kupující (`buyer`)
+- **Statistiky** – přehled souhrnných dat faktur:
+  - počet faktur
+  - celková částka všech faktur
+  - průměrná hodnota faktury
 
 ---
 
