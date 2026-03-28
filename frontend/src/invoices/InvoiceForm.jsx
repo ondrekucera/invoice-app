@@ -1,28 +1,33 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { Save, ArrowLeft } from "lucide-react";
-import { apiGet, apiPost, apiPut } from "../utils/api";
+import { apiGet, apiPost, apiPut, parseApiError } from "../utils/api";
+import PersonSelect from "../components/PersonSelect";
+import DateInput from "../components/DateInput";
+import { useToast } from "../components/ToastContext";
 
 const InvoiceForm = () => {
   const navigate  = useNavigate();
   const { id }    = useParams();
   const isEditing = !!id;
+  const { addToast, updateToast } = useToast();
 
   const [persons, setPersons] = useState([]);
   const [invoice, setInvoice] = useState({
-    invoiceNumber: "",
-    issued: "",
-    dueDate: "",
-    product: "",
-    price: "",
-    vat: "",
-    note: "",
-    buyer:  { _id: "" },
-    seller: { _id: "" },
+    invoiceNumber: "", issued: "", dueDate: "", product: "",
+    price: "", vat: "", note: "",
+    buyer: { _id: "" }, seller: { _id: "" },
   });
-  const [loading,      setLoading]      = useState(false);
-  const [fetchLoading, setFetchLoading] = useState(isEditing);
-  const [error,        setError]        = useState(null);
+  const [loading,          setLoading]          = useState(false);
+  const [fetchLoading,     setFetchLoading]     = useState(isEditing);
+  const [error,            setError]            = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+
+  const fieldRefs = useRef({});
+  const getRef = (name) => {
+    if (!fieldRefs.current[name]) fieldRefs.current[name] = React.createRef();
+    return fieldRefs.current[name];
+  };
 
   useEffect(() => {
     apiGet("/api/persons").then(setPersons);
@@ -38,28 +43,80 @@ const InvoiceForm = () => {
           });
           setFetchLoading(false);
         })
-        .catch(e => { setError(e.message); setFetchLoading(false); });
+        .catch(e => { setError(parseApiError(e).message); setFetchLoading(false); });
     }
   }, [id]);
 
   const handleChange = (field) => (e) => {
-    const value = e.target.value;
-    setInvoice(prev => ({ ...prev, [field]: value }));
+    setInvoice(prev => ({ ...prev, [field]: e.target.value }));
+    if (validationErrors[field]) {
+      setValidationErrors(prev => { const n = {...prev}; delete n[field]; return n; });
+    }
   };
 
-  const handlePersonChange = (role) => (e) => {
-    const value = e.target.value;
-    setInvoice(prev => ({ ...prev, [role]: { _id: value } }));
+  const handleDateChange = (field) => (isoValue) => {
+    setInvoice(prev => ({ ...prev, [field]: isoValue }));
+    if (validationErrors[field]) {
+      setValidationErrors(prev => { const n = {...prev}; delete n[field]; return n; });
+    }
   };
+
+  const handlePersonSelect = (role) => (personId) => {
+    setInvoice(prev => ({ ...prev, [role]: { _id: personId } }));
+    if (validationErrors[role]) {
+      setValidationErrors(prev => { const n = {...prev}; delete n[role]; return n; });
+    }
+  };
+
+  const handlePersonCreated = (created) => {
+    setPersons(prev => [...prev, created]);
+    addToast(`Osoba „${created.name}" byla vytvořena.`, "success");
+  };
+
+  const focusFirstError = useCallback((errors) => {
+    const ORDER = ["invoiceNumber","product","issued","dueDate","price","vat","seller","buyer"];
+    for (const fname of ORDER) {
+      if (errors[fname]) {
+        const el = fieldRefs.current[fname]?.current;
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(() => { el.focus?.(); el.classList?.add("input-error-pulse-active"); setTimeout(() => el.classList?.remove("input-error-pulse-active"), 1200); }, 300);
+        }
+        break;
+      }
+    }
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     setError(null);
+    setValidationErrors({});
+
+    const toastId = addToast(isEditing ? "Ukládám fakturu..." : "Vytvářím fakturu...", "loading");
+
     (isEditing ? apiPut("/api/invoices/" + id, invoice) : apiPost("/api/invoices", invoice))
-      .then(() => navigate("/invoices"))
-      .catch(e => { setError(e.message); setLoading(false); });
+      .then(() => {
+        updateToast(toastId, { message: isEditing ? "Faktura byla uložena." : "Faktura byla vytvořena.", type: "success" });
+        navigate("/invoices");
+      })
+      .catch(e => {
+        const { message, validationErrors: ve } = parseApiError(e);
+        if (ve) {
+          setValidationErrors(ve);
+          setError("Formulář obsahuje chyby. Zkontrolujte vyplněná pole.");
+          updateToast(toastId, { message: "Formulář obsahuje chyby.", type: "error" });
+          setTimeout(() => focusFirstError(ve), 100);
+        } else {
+          setError(message);
+          updateToast(toastId, { message, type: "error" });
+        }
+        setLoading(false);
+      });
   };
+
+  const fe = (field) => validationErrors[field] || null;
 
   if (fetchLoading)
     return <div className="loading-spinner"><div className="spinner" />Načítám fakturu...</div>;
@@ -70,133 +127,73 @@ const InvoiceForm = () => {
         <div className="page-header-left">
           <div className="page-eyebrow">Faktury</div>
           <h1 className="page-title">{isEditing ? "Upravit fakturu" : "Nová faktura"}</h1>
-          {isEditing && invoice.product && (
-            <div className="page-sub">{invoice.product}</div>
-          )}
+          {isEditing && invoice.product && <div className="page-sub">{invoice.product}</div>}
         </div>
-        <Link to="/invoices" className="btn-outline">
-          <ArrowLeft size={14} /> Zpět na faktury
-        </Link>
+        <Link to="/invoices" className="btn-outline"><ArrowLeft size={14} /> Zpět na faktury</Link>
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
 
       <div className="form-card">
-        <form onSubmit={handleSubmit}>
-          <div className="form-section-label">Základní informace</div>
-          <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">Číslo faktury *</label>
-              <input
-                className="form-input"
-                type="number"
-                required
-                placeholder="2024001"
-                value={invoice.invoiceNumber}
-                onChange={handleChange("invoiceNumber")}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Produkt *</label>
-              <input
-                className="form-input"
-                type="text"
-                required
-                placeholder="Název produktu nebo služby"
-                value={invoice.product}
-                onChange={handleChange("product")}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Datum vystavení *</label>
-              <input
-                className="form-input"
-                type="date"
-                required
-                value={invoice.issued}
-                onChange={handleChange("issued")}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Datum splatnosti *</label>
-              <input
-                className="form-input"
-                type="date"
-                required
-                value={invoice.dueDate}
-                onChange={handleChange("dueDate")}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Cena (Kč) *</label>
-              <input
-                className="form-input"
-                type="number"
-                required
-                min="0"
-                placeholder="0"
-                value={invoice.price}
-                onChange={handleChange("price")}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">DPH (%) *</label>
-              <input
-                className="form-input"
-                type="number"
-                required
-                min="0"
-                max="100"
-                placeholder="21"
-                value={invoice.vat}
-                onChange={handleChange("vat")}
-              />
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="form-section-block">
+            <div className="form-section-label">📄 Základní informace</div>
+            <div className="form-grid">
+              <div className="form-group">
+                <label className="form-label">Číslo faktury<span className="required-dot" /></label>
+                <input ref={getRef("invoiceNumber")} className={`form-input${fe("invoiceNumber") ? " input-error" : ""}`}
+                  type="number" placeholder="2024001" value={invoice.invoiceNumber}
+                  onChange={handleChange("invoiceNumber")} min="1" />
+                {fe("invoiceNumber") && <div className="field-error">{fe("invoiceNumber")}</div>}
+              </div>
+              <div className="form-group">
+                <label className="form-label">Produkt<span className="required-dot" /></label>
+                <input ref={getRef("product")} className={`form-input${fe("product") ? " input-error" : ""}`}
+                  type="text" placeholder="Název produktu nebo služby" value={invoice.product}
+                  onChange={handleChange("product")} />
+                {fe("product") && <div className="field-error">{fe("product")}</div>}
+              </div>
+              <DateInput label="Datum vystavení" required value={invoice.issued}
+                onChange={handleDateChange("issued")} fieldError={fe("issued")} />
+              <DateInput label="Datum splatnosti" required value={invoice.dueDate}
+                onChange={handleDateChange("dueDate")} fieldError={fe("dueDate")} />
+              <div className="form-group">
+                <label className="form-label">Cena (Kč)<span className="required-dot" /></label>
+                <input ref={getRef("price")} className={`form-input${fe("price") ? " input-error" : ""}`}
+                  type="number" min="0" placeholder="0" value={invoice.price}
+                  onChange={handleChange("price")} />
+                {fe("price") && <div className="field-error">{fe("price")}</div>}
+              </div>
+              <div className="form-group">
+                <label className="form-label">DPH (%)<span className="required-dot" /></label>
+                <input ref={getRef("vat")} className={`form-input${fe("vat") ? " input-error" : ""}`}
+                  type="number" min="0" max="100" placeholder="21" value={invoice.vat}
+                  onChange={handleChange("vat")} />
+                {fe("vat") && <div className="field-error">{fe("vat")}</div>}
+              </div>
             </div>
           </div>
 
-          <div className="form-section-label" style={{ marginTop: "0.75rem" }}>Smluvní strany</div>
-          <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">Dodavatel (prodávající) *</label>
-              <select
-                className="form-input"
-                required
-                value={invoice.seller._id}
-                onChange={handlePersonChange("seller")}
-              >
-                <option value="">— Vyberte dodavatele —</option>
-                {persons.map(p => (
-                  <option key={p._id} value={p._id}>{p.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Odběratel (kupující) *</label>
-              <select
-                className="form-input"
-                required
-                value={invoice.buyer._id}
-                onChange={handlePersonChange("buyer")}
-              >
-                <option value="">— Vyberte odběratele —</option>
-                {persons.map(p => (
-                  <option key={p._id} value={p._id}>{p.name}</option>
-                ))}
-              </select>
+          <div className="form-section-block">
+            <div className="form-section-label">🤝 Smluvní strany</div>
+            <div className="form-grid">
+              <PersonSelect label={<>Dodavatel (prodávající)<span className="required-dot" /></>}
+                persons={persons} value={invoice.seller._id} onChange={handlePersonSelect("seller")}
+                placeholder="— Vyberte dodavatele —" onPersonCreated={handlePersonCreated} fieldError={fe("seller")} />
+              <PersonSelect label={<>Odběratel (kupující)<span className="required-dot" /></>}
+                persons={persons} value={invoice.buyer._id} onChange={handlePersonSelect("buyer")}
+                placeholder="— Vyberte odběratele —" onPersonCreated={handlePersonCreated} fieldError={fe("buyer")} />
             </div>
           </div>
 
-          <div className="form-section-label" style={{ marginTop: "0.75rem" }}>Doplňující informace</div>
-          <div className="form-group">
-            <label className="form-label">Poznámka</label>
-            <textarea
-              className="form-input"
-              rows={3}
-              style={{ resize: "vertical" }}
-              placeholder="Nepovinná poznámka k faktuře..."
-              value={invoice.note || ""}
-              onChange={handleChange("note")}
-            />
+          <div className="form-section-block form-section-block-last">
+            <div className="form-section-label">📝 Doplňující informace</div>
+            <div className="form-group">
+              <label className="form-label">Poznámka</label>
+              <textarea className="form-input" rows={3} style={{ resize: "vertical" }}
+                placeholder="Nepovinná poznámka k faktuře..." value={invoice.note || ""}
+                onChange={handleChange("note")} />
+            </div>
           </div>
 
           <div style={{ display: "flex", gap: "0.75rem" }}>

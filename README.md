@@ -1,297 +1,417 @@
-# 🟣 Okvion — Invoice Management App
+# 🟣 Okvion — Fakturační aplikace
 
 ![Java](https://img.shields.io/badge/Java-17-orange?style=flat-square&logo=openjdk)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=flat-square&logo=springboot)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.1-6DB33F?style=flat-square&logo=springboot)
 ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)
-![Vite](https://img.shields.io/badge/Vite-Dev_Server-646CFF?style=flat-square&logo=vite)
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=flat-square&logo=vite)
 ![MySQL](https://img.shields.io/badge/MySQL-XAMPP-4479A1?style=flat-square&logo=mysql)
 ![MapStruct](https://img.shields.io/badge/MapStruct-1.5-red?style=flat-square)
 ![Lombok](https://img.shields.io/badge/Lombok-1.18-pink?style=flat-square)
 
-> Fullstack fakturační aplikace pro správu faktur a obchodních kontaktů.
-> REST API (Spring Boot) · React SPA · Dark / Light mode · Stránkování · Filtrace · Vlastní design systém
+> Fullstack fakturační aplikace — Spring Boot REST API · React SPA · vlastní design systém · dark/light mode
 
 ---
 
-## 📋 O projektu
+## O projektu
 
-**Okvion** je fullstack webová aplikace pro evidenci faktur a obchodních kontaktů. Pokrývá celý fakturační proces — od vytvoření osoby / firmy přes vystavení faktury až po přehledné statistiky a správu smluvních stran.
+**Okvion** je fullstack webová aplikace pro evidenci faktur a obchodních kontaktů. Pokrývá celý fakturační proces — od registrace osoby / firmy přes vytváření faktur, sledování splatnosti až po přehledné statistiky a správu smluvních stran.
 
-Vznikla jako portfoliový projekt v rámci kurzu **JAVA PRO developer** na [ITnetwork.cz](https://www.itnetwork.cz). Frontend a UI byly výrazně rozšířeny nad rámec zadání kurzu — vlastní design systém, dark mode, reusable komponenty, UX konzistence.
-
----
-
-## 🖼️ Přehled obrazovek
-
-| Obrazovka | Popis |
-|---|---|
-| 📊 **Dashboard** | Přehled KPI statistik, rychlé akce, seznam posledních faktur |
-| 👤 **Seznam osob** | Stránkovaný seznam s vyhledáváním podle jména, IČO a města |
-| 🧾 **Seznam faktur** | Přepínání Všechny / Vystavené / Přijaté, filtrace, stránkování |
-| 🔍 **Detail faktury** | Kompletní přehled faktury, výpočet DPH, badge prošlé splatnosti |
-| ✏️ **Formulář faktury** | Vytvoření a úprava faktury, výběr dodavatele a odběratele |
-| 📈 **Statistiky** | KPI karty s ručním refresh, odkaz zpět na seznam |
-| 🗑️ **Mazání** | Vlastní potvrzovací modal pro faktury i osoby — bez browser dialogů |
-| 🌙 **Dark / Light mode** | Přepínatelné téma persistované v localStorage |
-
-> 📸 *Screenshoty doplňte po nasazení nebo spuštění aplikace*
+Vznikla jako portfoliový projekt v rámci kurzu **JAVA PRO developer** na [ITnetwork.cz](https://www.itnetwork.cz). Nad rámec zadání kurzu byl projekt výrazně rozšířen o vlastní design systém, pokročilý error handling, UX komponenty a testování.
 
 ---
 
-## 🚀 Funkce aplikace
+## Hlavní funkce
 
-### 👤 Osoby (CRUD)
-- ✅ Vytvoření nové osoby / firmy (jméno, IČO, DIČ, adresa, kontakt, bankovní údaje)
-- ✅ Úprava existující osoby
-- ✅ Smazání osoby s potvrzovacím modalem (nevratná akce)
-- ✅ Detail osoby s kompletními údaji a odkazem na vystavené / přijaté faktury
-- ✅ Stránkovaný seznam osob — 10 / 25 / 50 na stránku
-- ✅ Filtrace podle jména, IČO nebo města (lokální, bez reload)
+### 👤 Správa osob
+- Plný CRUD — vytvoření, úprava, smazání, detail
+- Eviduje jméno / firmu, IČO, DIČ, bankovní spojení, kontakt, adresu
+- Vyhledávání podle jména, IČO nebo města (lokální filtrace bez reload)
+- Stránkování — 10 / 25 / 50 položek na stránku
+- Přehled vystavených a přijatých faktur přímo z detailu osoby
 
-### 🧾 Faktury (CRUD)
-- ✅ Vytvoření nové faktury s přiřazením dodavatele a odběratele
-- ✅ Úprava existující faktury
-- ✅ Smazání faktury s potvrzovacím modalem (nevratná akce)
-- ✅ Detail faktury — automatický výpočet ceny včetně DPH
-- ✅ **Badge „Po splatnosti"** — vizuální upozornění v detailu faktury
-- ✅ **Datum vystavení** zobrazeno přímo v řádku seznamu faktur
-- ✅ Filtrace faktur podle produktu, minimální a maximální ceny
-- ✅ Přepínání pohledů: **Všechny / Vystavené / Přijaté** s výběrem osoby
-- ✅ Stránkovaný seznam faktur — 10 / 25 / 50 na stránku
+### 🧾 Správa faktur
+- Plný CRUD — vytvoření, úprava, smazání, detail
+- Přiřazení dodavatele a odběratele z evidence osob
+- Automatický výpočet ceny s DPH
+- Badge „Po splatnosti" — vizuální upozornění při prošlém datu splatnosti
+- Filtrování podle produktu, minimální a maximální ceny (JPA Specification)
+- Přepínání pohledů: Všechny / Vystavené / Přijaté s výběrem osoby
+- Stránkování — 10 / 25 / 50 položek na stránku
 
 ### 📊 Statistiky
-- ✅ Celkový počet faktur, součet a průměrná hodnota všech faktur
-- ✅ Data načítána živě z backendu
-- ✅ **Ruční refresh** bez přenačtení stránky
-- ✅ Statistiky dostupné i na dashboardu
+- Celkový počet faktur, součet a průměrná hodnota
+- Data se počítají přímo na backendu pomocí JPQL agregačních dotazů
+- Přehled dostupný na dashboardu i jako samostatná stránka
 
 ### 🎨 UI / UX
-- ✅ **Dark mode** jako výchozí téma, přepínatelný Light mode (persistuje v `localStorage`)
-- ✅ Fixní sidebar navigace — sbalitelný na desktopu, drawer (overlay) na mobilech
-- ✅ Responzivní design: desktop, tablet, mobil
-- ✅ Loading stavy, error handling, prázdné stavy s výzvou k akci
-- ✅ Konzistentní `page-eyebrow` breadcrumb labely napříč celou aplikací
-- ✅ Sjednocené labely tlačítek: „Zpět na faktury", „Upravit fakturu", „Smazat fakturu"
-
-### 🗑️ Delete flow (V5.5 / V5.6)
-- ✅ **Vlastní `ConfirmModal`** — nahrazuje `window.confirm` v celé aplikaci
-- ✅ Modal zobrazuje název / číslo mazaného záznamu a varování o nevratnosti akce
-- ✅ Zavíratelný klávesou Escape, klikem na overlay nebo tlačítkem Zrušit
-- ✅ Fokus na tlačítko Zrušit při otevření (bezpečnější default)
-- ✅ Napojený na: seznam faktur, detail faktury, seznam osob, detail osoby
+- Dark mode (výchozí) a Light mode — persistováno v `localStorage`
+- Sbalitelný sidebar na desktopu, mobilní drawer s overlay
+- Skeleton loading místo spinneru při načítání dat
+- Vlastní toast notifikace (success / error / loading) v pravém dolním rohu
+- Optimistic updates pro mazání — okamžitá reakce UI s rollbackem při chybě
+- Vlastní `ConfirmModal` — žádné `window.confirm` ani `alert` v celé aplikaci
+- Datum a čas v topbaru s volitelným formátem (24h / 12h)
+- Nastavení aplikace: téma, jazyk, formát data a formát času
 
 ---
 
-## ✨ Novinky ve V5
+## Architektura
 
-Verze V5 se zaměřila na dotažení UX, konzistenci a doplnění chybějících flow:
+```
+invoice-app/
+├── backend/                          # Spring Boot aplikace
+│   └── src/main/java/cz/itnetwork/
+│       ├── controller/               # REST controllery
+│       │   └── advice/               # Globální exception handler
+│       ├── service/                  # Business logika (rozhraní + implementace)
+│       ├── entity/                   # JPA entity
+│       │   └── repository/           # Spring Data repozitáře + JPA Specification
+│       ├── dto/                      # Data Transfer Objects
+│       │   └── mapper/               # MapStruct mappery (Entity ↔ DTO)
+│       ├── exception/                # Vlastní výjimky (BusinessException)
+│       ├── configuration/            # CORS konfigurace
+│       └── constant/                 # Výčtové typy (Countries)
+│
+└── frontend/                         # React SPA
+    └── src/
+        ├── pages/                    # HomePage (dashboard)
+        ├── invoices/                 # InvoiceIndex, InvoiceDetail, InvoiceForm,
+        │                             #   InvoiceTable, InvoiceStatistics
+        ├── persons/                  # PersonIndex, PersonDetail, PersonForm,
+        │                             #   PersonTable, Country
+        ├── components/               # Sdílené komponenty
+        │   ├── ToastContext.jsx       #   Toast systém (Context + Provider)
+        │   ├── PersonSelect.jsx       #   Vyhledávací dropdown pro výběr osoby
+        │   ├── CountrySelect.jsx      #   Vyhledávací dropdown pro výběr země
+        │   ├── DateInput.jsx          #   Custom date picker s kalendářem
+        │   ├── CustomSelect.jsx       #   Generický styled dropdown
+        │   ├── SkeletonList.jsx       #   Skeleton loading komponenta
+        │   ├── ConfirmModal.jsx       #   Potvrzovací modal
+        │   ├── Pagination.jsx         #   Stránkování
+        │   └── usePagination.js       #   Custom React hook
+        ├── utils/
+        │   ├── api.js                 #   Fetch wrapper s ErrorResponseDTO zpracováním
+        │   ├── appSettings.js         #   Settings manager (localStorage)
+        │   ├── dateUtils.js           #   Konverze a validace datumů
+        │   └── dateStringFormatter.js #   Formátování pro zobrazení
+        └── index.css                  #   Design systém (CSS proměnné, dark/light, animace)
+```
 
-| Novinka | Popis |
-|---|---|
-| 🔴 **Overdue badge** | V detailu faktury se zobrazí červený badge „Po splatnosti", pokud uplynulo datum splatnosti |
-| 📅 **Datum v seznamu** | Datum vystavení je viditelné přímo v řádku seznamu faktur bez nutnosti otevírat detail |
-| 🔄 **Refresh statistik** | Tlačítko pro ruční obnovení dat bez reload celé stránky |
-| ⬅️ **Kontextová navigace** | Tlačítka „Zpět na faktury" / „Zpět na osoby" místo generického „Zpět" |
-| 🏷️ **Sjednocení UI** | Konzistentní labely, eyebrow breadcrumby, button texty napříč celou aplikací |
-| 💾 **Kontextový submit** | Formulář faktury rozlišuje „Vytvořit fakturu" a „Uložit změny" dle kontextu |
+### Vrstvená architektura backendu
+
+```
+HTTP Request
+    ↓
+Controller          ← @Valid Bean Validation, @RequestBody
+    ↓
+Service             ← Business validace (BusinessException)
+    ↓
+Repository          ← JPA Specification, JPQL dotazy
+    ↓
+Entity / MySQL
+    ↓
+DTO + MapStruct     ← Entity → DTO před odesláním do controlleru
+    ↓
+HTTP Response       ← ErrorResponseDTO při chybě (timestamp, status, message, path, validationErrors)
+```
 
 ---
 
-## ✨ Novinky ve V5.5 a V5.6
-
-### V5.5 — ConfirmModal pro faktury
-- Nová znovupoužitelná komponenta `ConfirmModal` (animace, overlay, Escape, fokus)
-- Napojená na mazání faktury v seznamu faktur (`InvoiceTable`)
-- Napojená na mazání faktury v detailu faktury (`InvoiceDetail`)
-- Odstraněn `window.confirm` z invoice flow
-
-### V5.6 — ConfirmModal pro osoby
-- Stejný `ConfirmModal` napojený na mazání osoby v seznamu osob (`PersonTable`)
-- Stejný `ConfirmModal` napojený na mazání osoby v detailu osoby (`PersonDetail`)
-- `window.confirm` odstraněn z celého projektu — **0 výskytů**
-- Sjednocené `title` atributy: „Detail osoby", „Upravit osobu", „Smazat osobu"
-- Button labely v detailu osoby: „Zpět na osoby", „Upravit osobu"
-
----
-
-## 🛠️ Použité technologie
+## Použité technologie
 
 ### Backend
-| Technologie | Verze | Účel |
+
+| Technologie | Verze | Použití |
 |---|---|---|
 | Java | 17 | Programovací jazyk |
-| Spring Boot | 3.x | Aplikační framework |
-| Spring Data JPA / Hibernate | — | ORM, správa databáze, DDL auto |
-| JPA Specification | — | Dynamické filtrování faktur |
-| MapStruct | 1.5 | Mapování Entity ↔ DTO |
-| Lombok | 1.18 | Redukce boilerplate kódu |
-| Bean Validation | — | Validace vstupních dat |
-| Springdoc OpenAPI | 2.x | Swagger UI (`/swagger-ui.html`) |
+| Spring Boot | 3.1 | Aplikační framework, auto-konfigurace |
+| Spring Data JPA + Hibernate | — | ORM, DDL auto, lazy loading |
+| JPA Specification | — | Dynamické filtrování faktur (AND podmínky) |
+| MapStruct | 1.5 | Mapování Entity ↔ DTO bez boilerplate |
+| Lombok | 1.18 | Generování getterů, setterů, konstruktorů |
+| Bean Validation | — | Validace DTO (`@NotBlank`, `@Email`, `@DecimalMin`) |
+| Springdoc OpenAPI | 2.2 | Swagger UI |
+| JUnit 5 + Mockito | — | Unit testy service vrstvy |
 | Maven | — | Build a správa závislostí |
 
 ### Frontend
-| Technologie | Verze | Účel |
+
+| Technologie | Verze | Použití |
 |---|---|---|
 | React | 18 | UI framework, SPA |
-| React Router | v6 | Klientské routování |
-| Lucide React | — | Ikony |
-| CSS — vlastní design systém | — | CSS proměnné, dark/light mode, layout, animace |
-| Vite | — | Build tool a dev server |
+| React Router | v6 | Klientské routování, nested routes |
+| Lucide React | 0.383 | Ikony |
+| Vite | 6 | Build tool, dev server |
+| Vitest + Testing Library | — | Unit testy komponent |
+| CSS Custom Properties | — | Vlastní design systém, dark/light mode |
 
 ### Databáze a nástroje
-| Technologie | Účel |
+
+| Nástroj | Použití |
 |---|---|
-| MySQL (XAMPP) | Relační databáze, tabulky generovány automaticky |
+| MySQL (XAMPP) | Relační databáze — tabulky generovány automaticky |
 | Git / GitHub | Verzování, iterativní vývoj |
 
 ---
 
-## ⚙️ Spuštění projektu
+## Spuštění projektu
 
 ### Požadavky
+
 - Java 17+
 - Node.js 18+
 - XAMPP (MySQL)
-- IntelliJ IDEA (backend) / VS Code (frontend)
-
----
 
 ### 1. Databáze
 
 1. Spusť **XAMPP Control Panel** → nastartuj **MySQL**
-2. Otevři phpMyAdmin: `http://localhost/phpmyadmin`
-3. Vytvoř databázi `invoice_app`
-4. Tabulky se vygenerují automaticky při prvním spuštění backendu (Hibernate `ddl-auto: update`)
-
----
+2. Databáze `invoice_app` se vytvoří automaticky při prvním spuštění backendu
+3. Tabulky generuje Hibernate (`ddl-auto: update`)
 
 ### 2. Backend
 
 ```bash
-cd invoice-app/backend
+cd backend
+./mvnw spring-boot:run
 ```
 
-Zkontroluj přihlašovací údaje v `src/main/resources/application.yaml`:
+Zkontroluj `src/main/resources/application.yaml` — výchozí XAMPP konfigurace:
 
 ```yaml
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/invoice_app?createDatabaseIfNotExist=true
     username: root
-    password:        # výchozí XAMPP heslo je prázdné
+    password:          # výchozí XAMPP heslo je prázdné
 ```
 
-Spusť backend:
-
-```bash
-./mvnw spring-boot:run
-```
-
-> Backend běží na **`http://localhost:8080`**
-> Swagger UI: **`http://localhost:8080/swagger-ui.html`**
-
----
+Backend běží na: **`http://localhost:8080`**
+Swagger UI: **`http://localhost:8080/swagger-ui.html`**
+API dokumentace: **`http://localhost:8080/api-docs`**
 
 ### 3. Frontend
 
 ```bash
-cd invoice-app/frontend
+cd frontend
 npm install
 npm run dev
 ```
 
-> Frontend běží na **`http://localhost:3000`**
+Frontend běží na: **`http://localhost:3000`**
 
-> ⚠️ Backend musí být spuštěný dříve než frontend — jinak API volání selžou.
+> Backend musí být spuštěný dříve než frontend.
 
----
+### Testy
 
-## 📁 Struktura projektu
+```bash
+# Backend unit testy
+cd backend
+./mvnw test
 
-```
-invoice-app/
-│
-├── backend/
-│   └── src/main/java/cz/itnetwork/
-│       ├── controller/            # REST controllery (InvoiceController, PersonController)
-│       │   └── advice/            # GlobalExceptionHandler (EntityNotFoundException → 404)
-│       ├── service/               # Business logika — rozhraní + implementace
-│       ├── entity/                # JPA entity (InvoiceEntity, PersonEntity)
-│       │   └── repository/        # Spring Data repozitáře + JPA Specification (filtrace)
-│       ├── dto/                   # Data Transfer Objects (InvoiceDTO, PersonDTO, StatisticsDTO)
-│       │   └── mapper/            # MapStruct mappery (Entity ↔ DTO)
-│       ├── configuration/         # WebMvcConfigurer (CORS)
-│       └── constant/              # Výčtové typy (Countries)
-│
-└── frontend/
-    └── src/
-        ├── pages/                 # Dashboard (HomePage)
-        ├── invoices/              # InvoiceIndex, InvoiceDetail, InvoiceForm,
-        │                          # InvoiceTable, InvoiceStatistics
-        ├── persons/               # PersonIndex, PersonDetail, PersonForm,
-        │                          # PersonTable, Country, Role
-        ├── components/            # ConfirmModal, Pagination, usePagination hook,
-        │                          # InputField, InputSelect, InputCheck, FlashMessage
-        ├── utils/                 # api.js (apiGet/apiPost/apiPut/apiDelete),
-        │                          # dateStringFormatter.js
-        └── index.css              # Design systém: CSS proměnné, dark/light mode,
-                                   # layout, animace, sidebar, cards, modals
+# Frontend testy
+cd frontend
+npm run test
 ```
 
 ---
 
-## 📌 Historie verzí
+## API přehled
 
-| Verze | Co přibylo |
-|---|---|
-| **V1** | Základ projektu — Spring Boot + MySQL + základní CRUD pro osoby |
-| **V2** | CRUD pro faktury, endpointy pro vystavené a přijaté faktury |
-| **V3** | Edit a delete pro osoby, statistiky na backendu (`StatisticsDTO`) |
-| **V4** | Dashboard UI, sidebar navigace, dark mode, branding Okvion |
-| **V4.1** | Dynamická filtrace přes JPA Specification, filter bar na frontendu |
-| **V4.2** | Sidebar collapse na desktopu, mobilní drawer s overlay |
-| **V4.3** | Oprava ztráty focusu ve formulářích (Field komponenta mimo render) |
-| **V4.4** | UX pro Vystavené/Přijaté faktury s výběrem osoby, finální branding |
-| **V4.5** | Frontend stránkování — 10 / 25 / 50 položek, vlastní `usePagination` hook |
-| **V4.5.1** | Fix edge case: automatická korekce stránky po smazání posledního záznamu |
-| **V5** | Overdue badge, datum v seznamu, refresh statistik, kontextová navigace, sjednocení UI |
-| **V5.5** | `ConfirmModal` — vlastní animovaný dialog nahrazuje `window.confirm` pro faktury |
-| **V5.6** | `ConfirmModal` rozšířen na osoby — jednotný delete flow v celé aplikaci, `window.confirm` = 0 |
+| Metoda | Endpoint | Popis |
+|---|---|---|
+| `GET` | `/api/persons` | Seznam všech viditelných osob |
+| `GET` | `/api/persons/{id}` | Detail osoby |
+| `POST` | `/api/persons` | Vytvoření osoby |
+| `PUT` | `/api/persons/{id}` | Úprava osoby |
+| `DELETE` | `/api/persons/{id}` | Soft-delete osoby (hidden = true) |
+| `GET` | `/api/invoices` | Seznam faktur s filtrací (query params) |
+| `GET` | `/api/invoices/{id}` | Detail faktury |
+| `POST` | `/api/invoices` | Vytvoření faktury |
+| `PUT` | `/api/invoices/{id}` | Úprava faktury |
+| `DELETE` | `/api/invoices/{id}` | Smazání faktury |
+| `GET` | `/api/invoices/statistics` | Statistiky faktur |
+| `GET` | `/api/invoices/sales/{personId}` | Vystavené faktury osoby |
+| `GET` | `/api/invoices/purchases/{personId}` | Přijaté faktury osoby |
+
+Chybové odpovědi používají jednotnou strukturu `ErrorResponseDTO`:
+
+```json
+{
+  "timestamp": "2026-03-28T14:30:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Vstupní data obsahují chyby.",
+  "path": "/api/invoices",
+  "validationErrors": {
+    "product": "Produkt nesmí být prázdný.",
+    "issued": "Datum vystavení je povinné."
+  }
+}
+```
 
 ---
 
-## 🏆 Project Highlights
+## Validace a error handling
 
-Tato sekce shrnuje klíčové technické a designové rozhodnutí relevantní pro CV a portfolio:
+### Bean Validation (HTTP 400)
+- `PersonDTO`: `@NotBlank` na jméno a IČO, `@Email` na e-mail, `@Size` na ostatní stringy
+- `InvoiceDTO`: `@NotNull` na datum a smluvní strany, `@DecimalMin("0.0")` na cenu a DPH
+- Aktivováno přes `@Valid` na POST a PUT endpointech
 
-### Architektura a oddělení zodpovědností
-- Striktní vrstvená architektura: **Controller → Service (interface + impl) → Repository**
-- DTO pattern s **MapStruct** mapováním — entity nikdy neprocházejí přes API vrstvu přímo
-- **JPA Specification** pro dynamické sestavování filtrů bez N+1 problémů
-- Frontend a backend jsou zcela oddělené aplikace komunikující přes REST API
+### Business validace (HTTP 422)
+- Kupující a prodávající nesmí být stejná osoba
+- Datum splatnosti nesmí být před datem vystavení
+- Cena ani DPH nesmí být záporné
+- Null-safety kontroly pro buyer/seller ID
+- Implementováno v `InvoiceServiceImpl.validateInvoice()` přes `BusinessException`
+
+### Frontend error handling
+- `api.js` parsuje `ErrorResponseDTO` z každé chybové odpovědi
+- `parseApiError(error)` vrátí `{ message, validationErrors }` pro použití ve formulářích
+- Validační chyby se zobrazují inline pod příslušnými poli
+- Při chybě formulář scrolluje na první chybné pole, zavolá `focus()` a spustí pulse animaci
+- `noValidate` atribut na formulářích — žádná browser-level validace
+
+### Exception handling (backend)
+- `EntityNotFoundException` → HTTP 404
+- `MethodArgumentNotValidException` → HTTP 400 s mapou pole → zpráva
+- `BusinessException` → HTTP 422
+
+---
+
+## UX vylepšení
+
+### Toast notifikace
+- Vlastní toast systém bez externí knihovny — React Context + Provider
+- Typy: `success` (zelený), `error` (červený), `info` (modrý), `loading` (fialový se spinnerem)
+- `loading` toast se nezavírá automaticky — přechází na `success` / `error` po odpovědi backendu
+- `updateToast(id, patch)` umožňuje aktualizovat existující toast
+- Animace fade-in / fade-out pomocí CSS keyframes
+- Pozice: pravý dolní roh, stackování více toastů
+
+### Optimistic updates
+- Mazání faktur a osob: položka zmizí z UI okamžitě bez čekání na server
+- Při selhání API požadavku se položka vrátí zpět (rollback)
+- Chyba je zobrazena přes error toast
+
+### Skeleton loading
+- Místo spinneru se zobrazí skeleton řádky imitující skutečný layout
+- Shimmer animace pomocí CSS gradient + keyframes
+- Přizpůsobeno dark / light modu přes CSS proměnné
+
+### Custom formulářové komponenty
+- **`PersonSelect`** — vyhledávací dropdown pro výběr osoby z evidence, debounce 300ms, inline vytvoření nové osoby
+- **`CountrySelect`** — vyhledávací dropdown pro výběr země (aktuálně CZ / SK), filtruje podle názvu i klíčových slov
+- **`DateInput`** — textový input s custom kalendářem, podporuje CZ (DD.MM.YYYY) i ISO formát, validuje reálná data
+- **`CustomSelect`** — generický styled dropdown (nahrazuje `<select>` v paginaci)
+- Všechny custom selecty zavírají dropdown po výběru i kliknutím mimo komponentu
+
+### Nastavení aplikace
+- Téma (tmavé / světlé)
+- Jazyk (čeština / angličtina)
+- Formát datumu (DD.MM.YYYY / YYYY-MM-DD)
+- Formát času (24h / 12h)
+- Vše persistováno v `localStorage`
+
+---
+
+## Testování
+
+### Backend (JUnit 5 + Mockito)
+
+`InvoiceServiceImplTest` — 7 unit testů:
+- Throws při null buyer / seller
+- Throws při null buyer.id / seller.id
+- Throws když buyer == seller
+- Throws když dueDate je před issued
+- Throws při záporné ceně / DPH
+
+`PersonServiceImplTest` — 5 unit testů:
+- getAll vrací pouze viditelné osoby
+- removePerson nastaví hidden = true (soft-delete)
+- removePerson tiše selže pokud osoba neexistuje
+- getPersonById vyhodí EntityNotFoundException
+- addPerson uloží a vrátí DTO
+
+### Frontend (Vitest + Testing Library)
+
+`PersonSelect.test.jsx` — 5 testů:
+- Zobrazí placeholder při prázdné hodnotě
+- Zobrazí jméno vybrané osoby
+- Otevře dropdown po kliknutí
+- Zobrazí možnost „Vytvořit novou osobu"
+- Zavolá onChange po výběru osoby
+
+---
+
+## Project Highlights
+
+### Architektura
+- Striktní vrstvená architektura bez přeskakování vrstev
+- DTO pattern s MapStruct — JPA entity nikdy neprocházejí přes HTTP vrstvu
+- `BusinessException` odlišena od technických výjimek — různé HTTP statusy (422 vs 500)
+- Vlastní `ErrorResponseDTO` se sjednocenou strukturou pro všechny typy chyb
 
 ### Reusable komponenty
-- `ConfirmModal` — generický modal s podporou `title`, `message`, `danger` flag, callbacků, Escape klávesy a správy focusu
-- `usePagination` — vlastní React hook pro stránkování s automatickou korekcí stránky po smazání
-- `Pagination` — sdílená navigační komponenta použitá pro faktury i osoby
-- `Field` komponenta v `PersonForm` — definována mimo render cyklus (prevence ztráty focusu)
+- `usePagination` hook — stránkování s automatickou korekcí stránky po smazání záznamu
+- `ToastContext` — globální toast systém dostupný v celé aplikaci přes React Context
+- `ConfirmModal` — generický potvrzovací dialog s Escape klávesou, focus managementem a overlay
+- Custom selecty (`PersonSelect`, `CountrySelect`, `DateInput`) — konzistentní design, bez knihovny
+
+### Validace
+- Dvouúrovňová validace: Bean Validation (400) + business logika (422)
+- Frontend parsuje `validationErrors` mapu a zobrazuje zprávy inline u polí
+- Scroll + focus + pulse animace na první chybné pole při submit — bez browser validace
 
 ### UX přístup
-- Žádný `window.confirm` ani `alert` pro destruktivní akce — vše řeší vlastní modal
-- Kontextové texty tlačítek (ne generické „Zpět", ale „Zpět na faktury")
-- Badge upozornění na prošlou splatnost přímo v detailu faktury
-- Tab counter zobrazuje počet po filtraci, ne surový počet ze serveru
-- Refresh statistik bez reload — `apiGet` volaný znovu na klik
+- Žádný `window.confirm`, `alert()` ani browser popup — vše řeší vlastní komponenty
+- Toast progress: loading → success/error při každé mutační operaci
+- Optimistic updates zachovávají plynulost UI, rollback chrání integritu dat
+- Debounce vyhledávání v PersonSelect — filtr se spustí až po 300ms pauze
 
-### Design systém
-- Kompletní CSS design systém postavený na CSS Custom Properties (proměnných)
-- Dark mode jako výchozí téma, Light mode persistovaný v `localStorage`
-- Animace modalu přes `@keyframes` — žádná externí knihovna (Framer Motion apod.)
-- Responzivní layout pro desktop, tablet i mobil
+### Čistota řešení
+- Konzistentní kódový styl a pojmenování napříč backendem i frontendem
+- CSS design systém postavený výhradně na CSS Custom Properties — bez CSS frameworku
+- Skeleton loading respektuje skutečný layout — žádné generické loadery
+- Všechny komentáře v kódu jsou česky, stručné a vysvětlují „proč", ne „co"
 
 ---
 
-## 📬 Autor
+## Co jsem v projektu řešil
+
+### Backend
+- **Bean Validation** — validační anotace na DTO vrstvě, aktivace přes `@Valid` v controllerech
+- **Business validace** — `BusinessException` pro doménové chyby vs. `EntityNotFoundException` pro 404
+- **Sjednocený error response** — `ErrorResponseDTO` s `timestamp`, `status`, `message`, `path`, `validationErrors`
+- **JPA Specification** — dynamická filtrace faktur bez pevně napsaných JPQL dotazů
+- **Soft-delete** — osoby se nesmažou fyzicky, ale nastaví se `hidden = true`
+- **Aggregate dotazy** — statistiky přes `@Query` (COUNT, SUM) místo načítání všech entit do paměti
+- **Unit testy** — Mockito pro izolaci service vrstvy od databáze
+
+### Frontend
+- **Vlastní fetch wrapper** — `api.js` parsuje `ErrorResponseDTO`, hází `ApiError` s `validationErrors` polem
+- **Error handling ve formulářích** — `parseApiError()`, inline zobrazení chyb, scroll na první chybné pole
+- **Toast systém** — Context API, typy toastů, `updateToast()` pro přechod loading → success/error
+- **Optimistic updates** — okamžitá změna UI, rollback při selhání API
+- **Skeleton loading** — CSS shimmer animace místo spinneru, layout odpovídá skutečnému obsahu
+- **Custom selecty** — PersonSelect s debounce a inline vytvořením osoby, DateInput s custom kalendářem
+- **Settings** — ukládání předvoleb do `localStorage`, napojení na DateInput (formát) a TopBarClock (formát času)
+- **Sidebar fix** — `SidebarLinkInvoices` komponenta řeší aktivní stav Faktury / Statistiky bez konfliktu
+
+---
+
+## Možná budoucí rozšíření
+
+- Export faktur do PDF
+- Autentizace a autorizace (Spring Security, JWT)
+- Emailové notifikace při blížící se splatnosti
+- Vícejazyčné rozhraní (i18n)
+- Rozšíření evidence zemí
+- Integrační testy (Spring Boot Test + Testcontainers)
+
+---
+
+## Autor
 
 **Ondřej Kučera**
 
@@ -300,15 +420,5 @@ Tato sekce shrnuje klíčové technické a designové rozhodnutí relevantní pr
 ---
 
 <div align="center">
-  <sub>🟣 Okvion v5.6 &nbsp;·&nbsp; Java 17 + Spring Boot 3 + React 18 + Vite + MySQL</sub>
-</div>
-
-
----
-
-
----
-
-<div align="center">
-  <sub>🟣 Okvion v5.6 &nbsp;·&nbsp; Java 17 + Spring Boot 3 + React 18 + Vite + MySQL</sub>
+  <sub>🟣 Okvion v5.11 &nbsp;·&nbsp; Java 17 · Spring Boot 3.1 · React 18 · Vite 6 · MySQL</sub>
 </div>

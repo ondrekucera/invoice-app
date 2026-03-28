@@ -1,8 +1,10 @@
 package cz.itnetwork.dto;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class InvoiceFilterDTO {
 
     private Long buyerId;

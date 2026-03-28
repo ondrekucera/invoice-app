@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Search, X, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
-import { apiDelete, apiGet } from "../utils/api";
+import { apiDelete, apiGet, parseApiError } from "../utils/api";
 import PersonTable from "./PersonTable";
 import Pagination from "../components/Pagination";
 import { usePagination } from "../components/usePagination";
+import { useToast } from "../components/ToastContext";
+import SkeletonList from "../components/SkeletonList";
 
 const PersonIndex = () => {
   const [persons,    setPersons]    = useState([]);
@@ -12,26 +14,31 @@ const PersonIndex = () => {
   const [error,      setError]      = useState(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [query,      setQuery]      = useState({ name: "", ico: "", city: "" });
+  const { addToast } = useToast();
 
   const loadPersons = () => {
     setLoading(true);
     apiGet("/api/persons")
       .then(data => { setPersons(data); setLoading(false); })
-      .catch(e   => { setError(e.message); setLoading(false); });
+      .catch(e   => { setError(parseApiError(e).message); setLoading(false); });
   };
 
   const deletePerson = async (id) => {
+    const person = persons.find(p => p._id === id);
+    // Optimistic update – okamžité odstranění z UI
+    setPersons(prev => prev.filter(item => item._id !== id));
     try {
       await apiDelete("/api/persons/" + id);
-      setPersons(prev => prev.filter(item => item._id !== id));
+      addToast(`Osoba „${person?.name ?? id}" byla smazána.`, "success");
     } catch (e) {
-      alert("Chyba při mazání: " + e.message);
+      // Rollback – vrátí osobu zpět do seznamu
+      setPersons(prev => [...prev, person].sort((a, b) => a.name.localeCompare(b.name)));
+      addToast(parseApiError(e).message, "error");
     }
   };
 
   useEffect(() => { loadPersons(); }, []);
 
-  /* Lokální filtrace */
   const filtered = useMemo(() => {
     return persons.filter(p => {
       const nameMatch = !query.name ||
@@ -44,7 +51,6 @@ const PersonIndex = () => {
     });
   }, [persons, query]);
 
-  /* resetKey = serializovaný filtr → při každé změně filtru jde stránka na 1 */
   const resetKey = JSON.stringify(query);
   const { page, pageSize, setPage, setPageSize, paginated, total } =
     usePagination(filtered, resetKey);
@@ -79,7 +85,6 @@ const PersonIndex = () => {
         </div>
       </div>
 
-      {/* Filtrační bar */}
       {filterOpen && (
         <div className="filter-bar">
           <div className="form-group" style={{ margin: 0, flex: "1 1 180px" }}>
@@ -126,9 +131,7 @@ const PersonIndex = () => {
       {error && <div className="alert alert-danger">Chyba: {error}</div>}
 
       {loading ? (
-        <div className="loading-spinner">
-          <div className="spinner" /> Načítám osoby...
-        </div>
+        <SkeletonList rows={7} cols={3} />
       ) : (
         <>
           <PersonTable

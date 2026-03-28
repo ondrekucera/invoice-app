@@ -1,26 +1,37 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, Pencil, Trash2, Plus } from "lucide-react";
-import { apiDelete } from "../utils/api";
+import { apiDelete, parseApiError } from "../utils/api";
 import { dateStringFormatter } from "../utils/dateStringFormatter";
 import ConfirmModal from "../components/ConfirmModal";
+import { useToast } from "../components/ToastContext";
 
-const InvoiceTable = ({ items, totalFiltered, totalAll, isFiltered, onDelete }) => {
+const InvoiceTable = ({ items, totalFiltered, totalAll, isFiltered, onDelete, onOptimisticDelete, onRollback }) => {
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const { addToast } = useToast();
 
-  const pendingItem = items.find(i => i._id === pendingDeleteId);
+  const pendingItem = items.find(i => i._id === pendingDeleteId)
+    ?? (pendingDeleteId ? { invoiceNumber: pendingDeleteId } : null);
 
   const requestDelete = (id) => setPendingDeleteId(id);
 
   const handleConfirmDelete = () => {
-    apiDelete("/api/invoices/" + pendingDeleteId)
+    const id = pendingDeleteId;
+    const item = items.find(i => i._id === id);
+    setPendingDeleteId(null);
+
+    // Optimistic update – okamžité odstranění z UI
+    if (onOptimisticDelete) onOptimisticDelete(id);
+
+    apiDelete("/api/invoices/" + id)
       .then(() => {
-        setPendingDeleteId(null);
+        addToast(`Faktura #${item?.invoiceNumber} byla smazána.`, "success");
         if (onDelete) onDelete();
       })
       .catch(e => {
-        setPendingDeleteId(null);
-        alert("Chyba při mazání: " + e.message);
+        // Rollback – vrátí položku zpět
+        if (onRollback) onRollback(item);
+        addToast(parseApiError(e).message, "error");
       });
   };
 

@@ -4,10 +4,6 @@ import cz.itnetwork.dto.PersonDTO;
 import cz.itnetwork.entity.PersonEntity;
 import org.mapstruct.Mapper;
 
-/**
- * MapStruct mapper – automaticky generovaná implementace.
- * Převádí PersonEntity ↔ PersonDTO.
- */
 @Mapper(componentModel = "spring")
 public interface PersonMapper {
 

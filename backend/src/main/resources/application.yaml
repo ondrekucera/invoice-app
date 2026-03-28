@@ -1,7 +1,7 @@
 # =============================================================
-#  Invoice App – Version 1
+#  Invoice App – v5.6.3
 #  Databáze: MySQL přes XAMPP
-#  Testování: Postman
+#  Frontend: React (Vite) na portu 5173
 # =============================================================
 
 server:

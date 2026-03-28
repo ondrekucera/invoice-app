@@ -1292,3 +1292,853 @@ select.form-input option { background: var(--bg-card); color: var(--color-text);
 .btn-danger:active {
   transform: translateY(0);
 }
+
+/* =============================================
+   PERSON SELECT – vlastní stylovaný dropdown
+   ============================================= */
+.person-select-wrap {
+  position: relative;
+}
+
+.person-select-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.6rem 0.875rem;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.person-select-trigger:hover,
+.person-select-trigger.open {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-glow);
+  outline: none;
+}
+
+.person-select-trigger.placeholder .person-select-value {
+  color: var(--color-text-dim);
+}
+
+.person-select-icon {
+  color: var(--color-text-dim);
+  flex-shrink: 0;
+  display: flex;
+}
+
+.person-select-value {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.person-select-chevron {
+  color: var(--color-text-dim);
+  flex-shrink: 0;
+  display: flex;
+  transition: transform 0.2s;
+}
+
+.person-select-trigger.open .person-select-chevron {
+  transform: rotate(180deg);
+}
+
+.person-select-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  z-index: 100;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.person-select-dropdown::-webkit-scrollbar { width: 4px; }
+.person-select-dropdown::-webkit-scrollbar-track { background: transparent; }
+.person-select-dropdown::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 2px; }
+
+.person-select-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.person-select-option:last-child {
+  border-bottom: none;
+}
+
+.person-select-option:hover {
+  background: var(--bg-hover);
+}
+
+.person-select-option.active {
+  background: var(--color-primary-glow);
+}
+
+.person-select-option-name {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.person-select-option-ico {
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+  flex-shrink: 0;
+}
+
+.person-select-check {
+  color: var(--color-primary);
+  flex-shrink: 0;
+  display: flex;
+}
+
+.person-select-empty {
+  padding: 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+/* =============================================
+   DATE INPUT – custom date picker
+   ============================================= */
+.date-input-wrap {
+  position: relative;
+}
+
+.date-input-row {
+  display: flex;
+  gap: 0;
+}
+
+.date-input-row .date-input {
+  border-radius: 8px 0 0 8px;
+  border-right: none;
+}
+
+.date-input-row .date-input.focused {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-glow);
+  z-index: 1;
+}
+
+.date-cal-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  flex-shrink: 0;
+  background: var(--bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: 0 8px 8px 0;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.15s, color 0.15s;
+}
+
+.date-cal-btn:hover,
+.date-cal-btn.open {
+  background: var(--bg-card-hover);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.date-calendar {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 200;
+  background: var(--bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 0.75rem;
+  min-width: 260px;
+  animation: modal-in 0.15s ease;
+}
+
+.date-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.date-cal-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.date-cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.date-cal-nav:hover {
+  background: var(--bg-hover);
+  color: var(--color-text);
+}
+
+.date-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.date-cal-day-name {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  padding: 0.2rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.date-cal-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.date-cal-day:hover {
+  background: var(--bg-hover);
+}
+
+.date-cal-day.today {
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+.date-cal-day.selected {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.date-cal-day.selected.today {
+  border-color: transparent;
+}
+
+/* =============================================
+   CUSTOM SELECT – generický dropdown
+   ============================================= */
+.custom-select-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.custom-select-sm .custom-select-trigger {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.82rem;
+  border-radius: 6px;
+  gap: 0.3rem;
+}
+
+.custom-select-md .custom-select-trigger {
+  padding: 0.6rem 0.875rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  gap: 0.5rem;
+}
+
+.custom-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+
+.custom-select-trigger:hover,
+.custom-select-trigger.open {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.custom-select-trigger.open {
+  box-shadow: 0 0 0 3px var(--color-primary-glow);
+}
+
+.custom-select-chevron {
+  color: var(--color-text-dim);
+  display: flex;
+  transition: transform 0.2s;
+}
+
+.custom-select-trigger.open .custom-select-chevron {
+  transform: rotate(180deg);
+}
+
+.custom-select-dropdown {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 0;
+  min-width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  z-index: 150;
+  overflow: hidden;
+}
+
+.custom-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background 0.12s;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.custom-select-option:hover {
+  background: var(--bg-hover);
+}
+
+.custom-select-option.active {
+  background: var(--color-primary-glow);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.custom-select-check {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+/* =============================================
+   PERSON SELECT – search + create rozšíření
+   ============================================= */
+.person-select-search {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--bg-input);
+  border-radius: 8px 8px 0 0;
+}
+
+.person-select-search-icon {
+  color: var(--color-text-dim);
+  flex-shrink: 0;
+}
+
+.person-select-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  font-family: inherit;
+}
+
+.person-select-search-input::placeholder {
+  color: var(--color-text-dim);
+}
+
+.person-select-search-clear {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.person-select-search-clear:hover {
+  color: var(--color-text);
+}
+
+.person-select-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.person-select-list::-webkit-scrollbar { width: 4px; }
+.person-select-list::-webkit-scrollbar-track { background: transparent; }
+.person-select-list::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 2px; }
+
+.person-select-create {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.875rem;
+  font-size: 0.82rem;
+  color: var(--color-primary);
+  font-weight: 600;
+  cursor: pointer;
+  border-top: 1px solid var(--color-border);
+  transition: background 0.15s;
+}
+
+.person-select-create:hover {
+  background: var(--color-primary-glow);
+}
+
+/* =============================================
+   SETTINGS PAGE
+   ============================================= */
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+}
+
+.settings-row-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.settings-row-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.settings-row-sub {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-top: 0.1rem;
+}
+
+.settings-toggle-group {
+  display: flex;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.settings-toggle-btn {
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.settings-toggle-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.settings-toggle-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* =============================================
+   FIELD-LEVEL VALIDATION ERRORS
+   ============================================= */
+.field-error {
+  margin-top: 0.3rem;
+  font-size: 0.775rem;
+  color: var(--color-danger);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.form-input.input-error {
+  border-color: var(--color-danger);
+}
+
+.form-input.input-error:focus {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.person-select-trigger.input-error-trigger {
+  border-color: var(--color-danger);
+}
+
+.person-select-trigger.input-error-trigger:hover {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+/* =============================================
+   TOAST NOTIFICATIONS
+   ============================================= */
+.toast-container {
+  position: fixed;
+  top: calc(var(--topbar-height) + 0.75rem);
+  right: 1rem;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+  max-width: 360px;
+  width: calc(100vw - 2rem);
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  box-shadow: var(--shadow);
+  pointer-events: all;
+  border: 1px solid transparent;
+  backdrop-filter: blur(8px);
+}
+
+.toast-enter {
+  animation: toast-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.toast-exit {
+  animation: toast-out 0.35s ease forwards;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(40px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(0)    scale(1); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0)    scale(1); max-height: 80px; }
+  to   { opacity: 0; transform: translateX(20px) scale(0.95); max-height: 0; padding: 0; margin: 0; }
+}
+
+.toast-success {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: var(--color-success);
+}
+
+.toast-error {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--color-danger);
+}
+
+.toast-info {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: var(--color-info);
+}
+
+.toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1.5px solid currentColor;
+}
+
+.toast-message {
+  flex: 1;
+  color: var(--color-text);
+}
+
+.toast-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  font-size: 0.7rem;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.toast-close:hover {
+  background: var(--bg-hover);
+  color: var(--color-text);
+}
+
+/* =============================================
+   SKELETON LOADING
+   ============================================= */
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 56px 1fr 1fr 1fr 100px 90px;
+  gap: 0.75rem;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+@media (max-width: 768px) {
+  .skeleton-row {
+    grid-template-columns: 40px 1fr auto;
+  }
+  .skeleton-cell-3,
+  .skeleton-cell-4,
+  .skeleton-cell-5 { display: none; }
+}
+
+.skeleton-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.skeleton-block {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--color-border) 25%,
+    rgba(255,255,255,0.06) 50%,
+    var(--color-border) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s infinite linear;
+}
+
+.skeleton-block-sm {
+  height: 10px;
+  width: 60%;
+  margin-top: 0.15rem;
+  opacity: 0.6;
+}
+
+.skeleton-cell-1 .skeleton-block { width: 32px; height: 32px; border-radius: 50%; }
+.skeleton-cell-2 .skeleton-block { width: 85%; }
+.skeleton-cell-3 .skeleton-block { width: 70%; }
+.skeleton-cell-4 .skeleton-block { width: 70%; }
+.skeleton-cell-5 .skeleton-block { width: 80px; }
+.skeleton-cell-6 .skeleton-block { width: 72px; height: 28px; border-radius: 8px; }
+
+@keyframes skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* =============================================
+   TOAST – loading typ + spinner
+   ============================================= */
+.toast-loading {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.25);
+  color: var(--color-primary);
+}
+
+.toast-spinner {
+  animation: toast-spin 0.8s linear infinite;
+  display: block;
+}
+
+@keyframes toast-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* =============================================
+   REQUIRED DOT – červená tečka místo hvězdičky
+   ============================================= */
+.required-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-danger);
+  margin-left: 4px;
+  vertical-align: middle;
+  flex-shrink: 0;
+  position: relative;
+  top: -1px;
+}
+
+/* =============================================
+   FORM SECTIONS – vylepšené sekce formuláře
+   ============================================= */
+.form-section-block {
+  background: var(--bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 1.1rem 1.25rem 0.25rem;
+  margin-bottom: 0.85rem;
+}
+
+.form-section-block .form-section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin-bottom: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.form-section-block-last {
+  margin-bottom: 1.25rem;
+}
+
+/* =============================================
+   INPUT ERROR PULSE – probliknutí pole
+   ============================================= */
+@keyframes error-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+  50%  { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+  100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+}
+
+.input-error-pulse-active {
+  animation: error-pulse 0.8s ease forwards;
+  border-color: var(--color-danger) !important;
+}
+
+/* =============================================
+   TOAST – přesunutí do pravého dolního rohu
+   ============================================= */
+.toast-container {
+  top: auto !important;
+  bottom: 1.25rem;
+}
+
+/* =============================================
+   TOPBAR – datum a čas
+   ============================================= */
+.topbar-clock {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.topbar-clock-date {
+  color: var(--color-text-dim);
+}
+
+.topbar-clock-sep {
+  color: var(--color-text-dim);
+  opacity: 0.5;
+}
+
+.topbar-clock-time {
+  color: var(--color-text-muted);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* =============================================
+   SIDEBAR – separátory sekcí + centrování ikon
+   ============================================= */
+.sidebar-section-separator {
+  position: relative;
+  margin-top: 0.75rem !important;
+}
+
+.sidebar-section-separator::before {
+  content: "";
+  display: block;
+  height: 1px;
+  background: var(--color-border-soft);
+  margin: 0 0.75rem 0.5rem;
+}
+
+.sidebar-section-separator-bottom {
+  margin-bottom: 0.1rem;
+}
+
+/* V collapsed módu – ikony vycentrované */
+.sidebar.collapsed .sidebar-link {
+  justify-content: center;
+  padding: 0.6rem 0;
+}
+
+.sidebar.collapsed .sidebar-link .link-icon {
+  width: 100%;
+  justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-collapse-btn {
+  justify-content: center;
+  padding: 0.6rem 0;
+}

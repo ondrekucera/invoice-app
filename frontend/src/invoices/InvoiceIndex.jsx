@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Search, X, Plus, User } from "lucide-react";
 import { apiGet } from "../utils/api";
 import InvoiceTable from "./InvoiceTable";
 import Pagination from "../components/Pagination";
 import { usePagination } from "../components/usePagination";
+import SkeletonList from "../components/SkeletonList";
 
 const TABS = [
   { key: "all",       label: "Všechny" },
@@ -50,7 +51,7 @@ const InvoiceIndex = ({ type }) => {
     }
   }, [isPersonContext]);
 
-  const loadInvoices = (tab, pid, activeFilters) => {
+  const loadInvoices = useCallback((tab, pid, activeFilters) => {
     setLoading(true);
     setError(null);
 
@@ -87,25 +88,20 @@ const InvoiceIndex = ({ type }) => {
     apiGet(url)
       .then(data => { setInvoices(data); setLoading(false); })
       .catch(e   => { setError(e.message); setLoading(false); });
-  };
+  }, [isPersonContext, type, urlPersonId]);
 
   useEffect(() => {
     loadInvoices(activeTab, effectivePersonId, filters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, effectivePersonId, urlPersonId, type]);
+  }, [activeTab, effectivePersonId, filters, loadInvoices]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    const clearedFilters = { product: "", minPrice: "", maxPrice: "" };
-    setFilters(clearedFilters);
+    setFilters({ product: "", minPrice: "", maxPrice: "" });
     setFilterOpen(false);
-    loadInvoices(tab, effectivePersonId, clearedFilters);
   };
 
   const handlePersonChange = (e) => {
-    const pid = e.target.value;
-    setSelectedPerson(pid);
-    loadInvoices(activeTab, pid, filters);
+    setSelectedPerson(e.target.value);
   };
 
   const handleFilterChange = (e) => {
@@ -119,9 +115,7 @@ const InvoiceIndex = ({ type }) => {
   };
 
   const handleFilterReset = () => {
-    const empty = { product: "", minPrice: "", maxPrice: "" };
-    setFilters(empty);
-    loadInvoices(activeTab, effectivePersonId, empty);
+    setFilters({ product: "", minPrice: "", maxPrice: "" });
   };
 
   const isFiltered       = !!(filters.product || filters.minPrice || filters.maxPrice);
@@ -273,16 +267,17 @@ const InvoiceIndex = ({ type }) => {
 
       {!showPersonPrompt && (
         loading ? (
-          <div className="loading-spinner">
-            <div className="spinner" /> Načítám faktury...
-          </div>
+          <SkeletonList rows={7} cols={5} />
         ) : (
           <>
             <InvoiceTable
               items={paginated}
               totalFiltered={total}
+              totalAll={invoices.length}
               isFiltered={isFiltered}
               onDelete={() => loadInvoices(activeTab, effectivePersonId, filters)}
+              onOptimisticDelete={(id) => setInvoices(prev => prev.filter(i => i._id !== id))}
+              onRollback={(item) => setInvoices(prev => [...prev, item].sort((a, b) => b._id - a._id))}
             />
             <Pagination
               total={total}

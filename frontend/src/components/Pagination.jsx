@@ -1,18 +1,13 @@
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import CustomSelect from "./CustomSelect";
 
-const PAGE_SIZE_OPTIONS = [10, 25, 50];
+const PAGE_SIZE_OPTIONS = [
+  { value: 10, label: "10" },
+  { value: 25, label: "25" },
+  { value: 50, label: "50" },
+];
 
-/**
- * Sdílená paginační komponenta.
- *
- * Props:
- *   total      – celkový počet záznamů (po filtraci)
- *   page       – aktuální stránka (1-based)
- *   pageSize   – počet položek na stránku
- *   onPage     – callback(newPage)
- *   onPageSize – callback(newPageSize)
- */
 const Pagination = ({ total, page, pageSize, onPage, onPageSize }) => {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const from       = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -20,29 +15,21 @@ const Pagination = ({ total, page, pageSize, onPage, onPageSize }) => {
 
   return (
     <div className="pagination-bar">
-      {/* Info + pageSize výběr */}
       <div className="pagination-info">
         <span className="pagination-range">
-          {total === 0
-            ? "Žádné záznamy"
-            : `Zobrazeno ${from}–${to} z ${total}`}
+          {total === 0 ? "Žádné záznamy" : `Zobrazeno ${from}–${to} z ${total}`}
         </span>
-
         <label className="pagination-size-label">
           Na stránku:
-          <select
-            className="pagination-size-select"
+          <CustomSelect
+            options={PAGE_SIZE_OPTIONS}
             value={pageSize}
-            onChange={e => onPageSize(Number(e.target.value))}
-          >
-            {PAGE_SIZE_OPTIONS.map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
+            onChange={(v) => onPageSize(Number(v))}
+            size="sm"
+          />
         </label>
       </div>
 
-      {/* Navigace */}
       {totalPages > 1 && (
         <div className="pagination-nav">
           <button
@@ -86,10 +73,6 @@ const Pagination = ({ total, page, pageSize, onPage, onPageSize }) => {
   );
 };
 
-/**
- * Generuje pole čísel stránek s případnými "…" pro velké počty stránek.
- * Příklad pro 10 stran, aktuální 5: [1, "…", 4, 5, 6, "…", 10]
- */
 function buildPageNumbers(current, total) {
   if (total <= 7) {
     return Array.from({ length: total }, (_, i) => i + 1);
@@ -97,7 +80,6 @@ function buildPageNumbers(current, total) {
   const pages = new Set([1, total, current]);
   if (current > 1) pages.add(current - 1);
   if (current < total) pages.add(current + 1);
-
   const sorted = [...pages].sort((a, b) => a - b);
   const result = [];
   let prev = 0;

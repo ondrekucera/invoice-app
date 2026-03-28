@@ -20,63 +20,97 @@
  * Více informací na http://www.itnetwork.cz/licence
  */
 
-
 const API_URL = "http://localhost:8080";
 
-const fetchData = (url, requestOptions) => {
+// Zpracuje response – při chybě vyhodí ApiError s daty z ErrorResponseDTO
+const fetchData = async (url, requestOptions) => {
     const apiUrl = `${API_URL}${url}`;
 
-    return fetch(apiUrl, requestOptions)
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
-            }
+    let response;
+    try {
+        response = await fetch(apiUrl, requestOptions);
+    } catch (networkError) {
+        throw new ApiError("Server není dostupný. Zkontrolujte připojení.", null, null);
+    }
 
-            if (requestOptions.method !== 'DELETE')
-                return response.json();
-        })
-        .catch((error) => {
-            throw error;
-        });
+    // DELETE vrací 204 No Content – tělo neočekáváme
+    if (requestOptions.method === "DELETE") {
+        if (!response.ok) {
+            let data = null;
+            try { data = await response.json(); } catch {}
+            throw new ApiError(data?.message || "Chyba při mazání.", data?.validationErrors || null, response.status);
+        }
+        return;
+    }
+
+    let data = null;
+    try {
+        data = await response.json();
+    } catch {
+        if (!response.ok) {
+            throw new ApiError(`Chyba serveru: ${response.status}`, null, response.status);
+        }
+        return;
+    }
+
+    if (!response.ok) {
+        // Pokud backend vrátil validationErrors (400), předáme je celé
+        const validationErrors = data?.validationErrors ?? null;
+        const message = data?.message || `Chyba: ${response.status}`;
+        throw new ApiError(message, validationErrors, response.status);
+    }
+
+    return data;
+};
+
+// Vlastní třída chyby – nese message, validationErrors a HTTP status
+export class ApiError extends Error {
+    constructor(message, validationErrors = null, status = null) {
+        super(message);
+        this.name = "ApiError";
+        this.validationErrors = validationErrors;
+        this.status = status;
+    }
+}
+
+// Helper pro formuláře – extrahuje message a validationErrors z chyby
+export const parseApiError = (error) => {
+    if (error instanceof ApiError) {
+        return {
+            message: error.message,
+            validationErrors: error.validationErrors || null,
+        };
+    }
+    return {
+        message: error?.message || "Neznámá chyba.",
+        validationErrors: null,
+    };
 };
 
 export const apiGet = (url, params) => {
     const filteredParams = Object.fromEntries(
         Object.entries(params || {}).filter(([_, value]) => value != null)
     );
-
     const apiUrl = `${url}?${new URLSearchParams(filteredParams)}`;
-    const requestOptions = {
-        method: "GET",
-    };
-
-    return fetchData(apiUrl, requestOptions);
+    return fetchData(apiUrl, { method: "GET" });
 };
 
 export const apiPost = (url, data) => {
-    const requestOptions = {
+    return fetchData(url, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-    };
-
-    return fetchData(url, requestOptions);
+    });
 };
 
 export const apiPut = (url, data) => {
-    const requestOptions = {
+    return fetchData(url, {
         method: "PUT",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-    };
-
-    return fetchData(url, requestOptions);
+    });
 };
 
 export const apiDelete = (url) => {
-    const requestOptions = {
-        method: "DELETE",
-    };
-
-    return fetchData(url, requestOptions);
+    return fetchData(url, { method: "DELETE" });
 };
