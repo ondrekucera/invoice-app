@@ -18,7 +18,7 @@ const InvoiceIndex = ({ type }) => {
   const [persons,        setPersons]        = useState([]);
   const [selectedPerson, setSelectedPerson] = useState("");
   const [activeTab,      setActiveTab]      = useState("all");
-  const [invoices,       setInvoices]       = useState([]);   // všechna načtená data
+  const [invoices,       setInvoices]       = useState([]);
   const [loading,        setLoading]        = useState(true);
   const [error,          setError]          = useState(null);
   const [filterOpen,     setFilterOpen]     = useState(false);
@@ -28,7 +28,6 @@ const InvoiceIndex = ({ type }) => {
   const effectivePersonId = isPersonContext ? urlPersonId : selectedPerson;
   const needsPerson       = (tab) => tab === "sales" || tab === "purchases";
 
-  /* resetKey – při změně tabu, filtru nebo osoby jde stránka zpět na 1 */
   const resetKey = `${activeTab}|${effectivePersonId}|${JSON.stringify(filters)}`;
   const { page, pageSize, setPage, setPageSize, paginated, total } =
     usePagination(invoices, resetKey);
@@ -39,19 +38,22 @@ const InvoiceIndex = ({ type }) => {
     return "Faktury";
   };
 
-  /* Načti seznam osob (jen na hlavní stránce) */
+  const getEyebrow = () => {
+    if (isPersonContext) return "Osoba";
+    if (type === "sales" || type === "purchases") return "Faktury · Osoba";
+    return "Evidence";
+  };
+
   useEffect(() => {
     if (!isPersonContext) {
       apiGet("/api/persons").then(setPersons).catch(() => {});
     }
   }, [isPersonContext]);
 
-  /* Načítání faktur z backendu */
   const loadInvoices = (tab, pid, activeFilters) => {
     setLoading(true);
     setError(null);
 
-    /* URL kontext osoby (z detailu osoby) */
     if (isPersonContext) {
       const url = type === "sales"
         ? `/api/invoices/sales/${urlPersonId}`
@@ -62,7 +64,6 @@ const InvoiceIndex = ({ type }) => {
       return;
     }
 
-    /* Tab "Všechny" */
     if (tab === "all") {
       const params = {};
       if (activeFilters.product)  params.product  = activeFilters.product;
@@ -74,14 +75,12 @@ const InvoiceIndex = ({ type }) => {
       return;
     }
 
-    /* Tab Vystavené / Přijaté bez osoby */
     if (!pid) {
       setInvoices([]);
       setLoading(false);
       return;
     }
 
-    /* Tab Vystavené / Přijaté s osobou */
     const url = tab === "sales"
       ? `/api/invoices/sales/${pid}`
       : `/api/invoices/purchases/${pid}`;
@@ -95,7 +94,6 @@ const InvoiceIndex = ({ type }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, effectivePersonId, urlPersonId, type]);
 
-  /* Handlery */
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     const clearedFilters = { product: "", minPrice: "", maxPrice: "" };
@@ -126,7 +124,7 @@ const InvoiceIndex = ({ type }) => {
     loadInvoices(activeTab, effectivePersonId, empty);
   };
 
-  const isFiltered      = !!(filters.product || filters.minPrice || filters.maxPrice);
+  const isFiltered       = !!(filters.product || filters.minPrice || filters.maxPrice);
   const showPersonPrompt = !isPersonContext && needsPerson(activeTab) && !effectivePersonId;
   const showTable        = !needsPerson(activeTab) || !!effectivePersonId || isPersonContext;
 
@@ -136,10 +134,9 @@ const InvoiceIndex = ({ type }) => {
 
   return (
     <div>
-      {/* Záhlaví */}
       <div className="page-header">
         <div className="page-header-left">
-          <div className="page-eyebrow">{isPersonContext ? "Osoba" : "Evidence"}</div>
+          <div className="page-eyebrow">{getEyebrow()}</div>
           <h1 className="page-title">{getTitle()}</h1>
         </div>
         <div className="page-actions">
@@ -158,7 +155,6 @@ const InvoiceIndex = ({ type }) => {
         </div>
       </div>
 
-      {/* Taby + výběr osoby */}
       {!isPersonContext && (
         <div className="invoice-controls">
           <div className="tab-switcher">
@@ -169,8 +165,8 @@ const InvoiceIndex = ({ type }) => {
                 onClick={() => handleTabChange(tab.key)}
               >
                 {tab.label}
-                {activeTab === tab.key && showTable && (
-                  <span className="tab-count">{invoices.length}</span>
+                {activeTab === tab.key && showTable && !loading && (
+                  <span className="tab-count">{total}</span>
                 )}
               </button>
             ))}
@@ -194,7 +190,6 @@ const InvoiceIndex = ({ type }) => {
         </div>
       )}
 
-      {/* Prompt – vyberte osobu */}
       {showPersonPrompt && (
         <div className="person-prompt">
           <div className="person-prompt-icon">
@@ -210,7 +205,6 @@ const InvoiceIndex = ({ type }) => {
         </div>
       )}
 
-      {/* Filter bar */}
       {filterOpen && activeTab === "all" && !isPersonContext && (
         <form className="filter-bar" onSubmit={handleFilterSubmit}>
           <div className="form-group" style={{ margin: 0, flex: "1 1 160px" }}>
@@ -262,7 +256,6 @@ const InvoiceIndex = ({ type }) => {
 
       {error && <div className="alert alert-danger">Chyba: {error}</div>}
 
-      {/* Info řádek – aktivní osoba */}
       {!isPersonContext && selectedPersonName && needsPerson(activeTab) && (
         <div style={{
           fontSize: "0.8rem",
@@ -278,7 +271,6 @@ const InvoiceIndex = ({ type }) => {
         </div>
       )}
 
-      {/* Obsah */}
       {!showPersonPrompt && (
         loading ? (
           <div className="loading-spinner">

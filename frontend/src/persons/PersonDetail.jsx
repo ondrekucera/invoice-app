@@ -3,13 +3,15 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { Pencil, ArrowLeft, FileText, Trash2 } from "lucide-react";
 import { apiGet, apiDelete } from "../utils/api";
 import Country from "./Country";
+import ConfirmModal from "../components/ConfirmModal";
 
 const PersonDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [person, setPerson] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(null);
+  const [person, setPerson]         = useState({});
+  const [loading, setLoading]       = useState(true);
+  const [error,   setError]         = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     apiGet("/api/persons/" + id)
@@ -17,12 +19,13 @@ const PersonDetail = () => {
       .catch(e   => { setError(e.message); setLoading(false); });
   }, [id]);
 
-  const handleDelete = () => {
-    if (window.confirm(`Opravdu chcete smazat osobu ${person.name}?`)) {
-      apiDelete("/api/persons/" + id)
-        .then(() => navigate("/persons"))
-        .catch(e => alert("Chyba: " + e.message));
-    }
+  const handleDeleteRequest  = () => setConfirmOpen(true);
+  const handleCancelDelete   = () => setConfirmOpen(false);
+  const handleConfirmDelete  = () => {
+    setConfirmOpen(false);
+    apiDelete("/api/persons/" + id)
+      .then(() => navigate("/persons"))
+      .catch(e => alert("Chyba: " + e.message));
   };
 
   if (loading)
@@ -34,84 +37,114 @@ const PersonDetail = () => {
   const country = Country.CZECHIA === person.country ? "Česká republika" : "Slovensko";
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-left">
-          <div className="page-eyebrow">Osoba</div>
-          <h1 className="page-title">{person.name}</h1>
-          <div className="page-sub">IČO: {person.identificationNumber}</div>
-        </div>
-        <div className="page-actions">
-          <Link to="/persons" className="btn-outline">
-            <ArrowLeft size={14} /> Zpět
-          </Link>
-          <Link to={"/persons/edit/" + id} className="btn-primary">
-            <Pencil size={14} /> Upravit
-          </Link>
-          <button className="btn-icon danger" onClick={handleDelete}
-            title="Smazat" style={{ padding: "0.5rem 0.65rem" }}>
-            <Trash2 size={15} />
-          </button>
-        </div>
-      </div>
+    <>
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title="Smazat osobu"
+        message={
+          <span>
+            Opravdu chcete smazat osobu{" "}
+            <strong style={{ color: "var(--color-text)" }}>{person.name}</strong>?
+            <span style={{
+              fontSize: "0.82rem",
+              color: "var(--color-text-muted)",
+              marginTop: "0.4rem",
+              display: "block",
+            }}>
+              Tato akce je nevratná.
+            </span>
+          </span>
+        }
+        confirmLabel="Smazat osobu"
+        cancelLabel="Zrušit"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        danger
+      />
 
-      <div className="card" style={{ marginBottom: "1rem" }}>
-        <div className="detail-grid">
-          <div>
-            <div className="detail-label">IČO</div>
-            <div className="detail-value">{person.identificationNumber}</div>
+      <div>
+        <div className="page-header">
+          <div className="page-header-left">
+            <div className="page-eyebrow">Osoba</div>
+            <h1 className="page-title">{person.name}</h1>
+            <div className="page-sub">IČO: {person.identificationNumber}</div>
           </div>
-          <div>
-            <div className="detail-label">DIČ</div>
-            <div className="detail-value">{person.taxNumber || "—"}</div>
+          <div className="page-actions">
+            <Link to="/persons" className="btn-outline">
+              <ArrowLeft size={14} /> Zpět na osoby
+            </Link>
+            <Link to={"/persons/edit/" + id} className="btn-primary">
+              <Pencil size={14} /> Upravit osobu
+            </Link>
+            <button
+              className="btn-icon danger"
+              onClick={handleDeleteRequest}
+              title="Smazat osobu"
+              style={{ padding: "0.5rem 0.65rem" }}
+            >
+              <Trash2 size={15} />
+            </button>
           </div>
-          <div>
-            <div className="detail-label">Telefon</div>
-            <div className="detail-value">{person.telephone || "—"}</div>
-          </div>
-          <div>
-            <div className="detail-label">E-mail</div>
-            <div className="detail-value">{person.mail || "—"}</div>
-          </div>
-          <div>
-            <div className="detail-label">Bankovní účet</div>
-            <div className="detail-value">
-              {person.accountNumber && person.bankCode
-                ? `${person.accountNumber}/${person.bankCode}`
-                : "—"}
-              {person.iban && (
-                <span style={{ color: "var(--color-text-muted)", fontSize: "0.82rem", marginLeft: "0.5rem" }}>
-                  ({person.iban})
-                </span>
-              )}
+        </div>
+
+        <div className="card" style={{ marginBottom: "1rem" }}>
+          <div className="detail-grid">
+            <div>
+              <div className="detail-label">IČO</div>
+              <div className="detail-value">{person.identificationNumber}</div>
             </div>
-          </div>
-          <div>
-            <div className="detail-label">Sídlo</div>
-            <div className="detail-value">
-              {[person.street, person.city, person.zip, country].filter(Boolean).join(", ") || "—"}
+            <div>
+              <div className="detail-label">DIČ</div>
+              <div className="detail-value">{person.taxNumber || "—"}</div>
             </div>
-          </div>
-          {person.note && (
-            <div style={{ gridColumn: "1 / -1" }}>
-              <div className="detail-label">Poznámka</div>
-              <div className="detail-value" style={{ color: "var(--color-text-muted)", fontStyle: "italic" }}>
-                {person.note}
+            <div>
+              <div className="detail-label">Telefon</div>
+              <div className="detail-value">{person.telephone || "—"}</div>
+            </div>
+            <div>
+              <div className="detail-label">E-mail</div>
+              <div className="detail-value">{person.mail || "—"}</div>
+            </div>
+            <div>
+              <div className="detail-label">Bankovní účet</div>
+              <div className="detail-value">
+                {person.accountNumber && person.bankCode
+                  ? `${person.accountNumber}/${person.bankCode}`
+                  : "—"}
+                {person.iban && (
+                  <span style={{ color: "var(--color-text-muted)", fontSize: "0.82rem", marginLeft: "0.5rem" }}>
+                    ({person.iban})
+                  </span>
+                )}
               </div>
             </div>
-          )}
+            <div>
+              <div className="detail-label">Sídlo</div>
+              <div className="detail-value">
+                {[person.street, person.city, person.zip, country].filter(Boolean).join(", ") || "—"}
+              </div>
+            </div>
+            {person.note && (
+              <div style={{ gridColumn: "1 / -1" }}>
+                <div className="detail-label">Poznámka</div>
+                <div className="detail-value" style={{ color: "var(--color-text-muted)", fontStyle: "italic" }}>
+                  {person.note}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: "0.75rem" }}>
+          <Link to={"/invoices/sales/" + id} className="btn-outline">
+            <FileText size={14} /> Vystavené faktury
+          </Link>
+          <Link to={"/invoices/purchases/" + id} className="btn-outline">
+            <FileText size={14} /> Přijaté faktury
+          </Link>
         </div>
       </div>
-
-      <div style={{ display: "flex", gap: "0.75rem" }}>
-        <Link to={"/invoices/sales/" + id} className="btn-outline">
-          <FileText size={14} /> Vystavené faktury
-        </Link>
-        <Link to={"/invoices/purchases/" + id} className="btn-outline">
-          <FileText size={14} /> Přijaté faktury
-        </Link>
-      </div>
-    </div>
+    </>
   );
 };
 

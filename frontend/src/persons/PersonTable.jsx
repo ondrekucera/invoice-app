@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, Pencil, Trash2, Plus, User } from "lucide-react";
+import ConfirmModal from "../components/ConfirmModal";
 
 /**
  * Props:
@@ -11,10 +12,13 @@ import { Eye, Pencil, Trash2, Plus, User } from "lucide-react";
  *   isFiltered    – příznak aktivního filtru
  */
 const PersonTable = ({ items, deletePerson, totalFiltered, totalAll, isFiltered }) => {
-  const handleDelete = (item) => {
-    if (window.confirm(`Opravdu chcete smazat osobu ${item.name}?`)) {
-      deletePerson(item._id);
-    }
+  const [pendingDeleteItem, setPendingDeleteItem] = useState(null);
+
+  const requestDelete    = (item) => setPendingDeleteItem(item);
+  const handleCancel     = ()     => setPendingDeleteItem(null);
+  const handleConfirm    = ()     => {
+    deletePerson(pendingDeleteItem._id);
+    setPendingDeleteItem(null);
   };
 
   if (totalFiltered === 0) {
@@ -39,80 +43,112 @@ const PersonTable = ({ items, deletePerson, totalFiltered, totalAll, isFiltered 
   }
 
   return (
-    <div>
-      {/* Info řádek */}
-      <div style={{
-        marginBottom: "0.75rem",
-        fontSize: "0.8rem",
-        color: "var(--color-text-muted)",
-        display: "flex",
-        alignItems: "center",
-        gap: "0.35rem",
-      }}>
-        {isFiltered ? (
-          <>
-            Nalezeno{" "}
-            <strong style={{ color: "var(--color-text)" }}>{totalFiltered}</strong>
-            {" z "}{totalAll}
-          </>
-        ) : (
-          <>
-            Celkem{" "}
-            <strong style={{ color: "var(--color-text)" }}>{totalAll}</strong>
-            {" "}osob
-          </>
-        )}
-      </div>
+    <>
+      <ConfirmModal
+        isOpen={pendingDeleteItem !== null}
+        title="Smazat osobu"
+        message={
+          pendingDeleteItem ? (
+            <span>
+              Opravdu chcete smazat osobu{" "}
+              <strong style={{ color: "var(--color-text)" }}>
+                {pendingDeleteItem.name}
+              </strong>?
+              <span style={{
+                fontSize: "0.82rem",
+                color: "var(--color-text-muted)",
+                marginTop: "0.4rem",
+                display: "block",
+              }}>
+                Tato akce je nevratná.
+              </span>
+            </span>
+          ) : "Opravdu chcete smazat tuto osobu? Tato akce je nevratná."
+        }
+        confirmLabel="Smazat osobu"
+        cancelLabel="Zrušit"
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+        danger
+      />
 
-      {/* Seznam */}
-      <div className="invoice-list">
-        {items.map((item) => (
-          <div
-            key={item._id}
-            className="invoice-row"
-            style={{ gridTemplateColumns: "40px 1fr auto" }}
-          >
-            <div className="invoice-num" style={{ display: "flex", alignItems: "center" }}>
-              <User size={14} style={{ opacity: 0.45 }} />
+      <div>
+        <div style={{
+          marginBottom: "0.75rem",
+          fontSize: "0.8rem",
+          color: "var(--color-text-muted)",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.35rem",
+        }}>
+          {isFiltered ? (
+            <>
+              Nalezeno{" "}
+              <strong style={{ color: "var(--color-text)" }}>{totalFiltered}</strong>
+              {" z "}{totalAll}
+            </>
+          ) : (
+            <>
+              Celkem{" "}
+              <strong style={{ color: "var(--color-text)" }}>{totalAll}</strong>
+              {" "}osob
+            </>
+          )}
+        </div>
+
+        <div className="invoice-list">
+          {items.map((item) => (
+            <div
+              key={item._id}
+              className="invoice-row"
+              style={{ gridTemplateColumns: "40px 1fr auto" }}
+            >
+              <div className="invoice-num" style={{ display: "flex", alignItems: "center" }}>
+                <User size={14} style={{ opacity: 0.45 }} />
+              </div>
+
+              <div>
+                <div className="invoice-product">{item.name}</div>
+                {item.identificationNumber && (
+                  <div style={{
+                    fontSize: "0.78rem",
+                    color: "var(--color-text-dim)",
+                    marginTop: "0.1rem",
+                  }}>
+                    IČO: {item.identificationNumber}
+                    {item.city && (
+                      <span style={{ marginLeft: "0.75rem" }}>{item.city}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="invoice-actions">
+                <Link to={"/persons/show/" + item._id} className="btn-icon info" title="Detail osoby">
+                  <Eye size={14} />
+                </Link>
+                <Link to={"/persons/edit/" + item._id} className="btn-icon warning" title="Upravit osobu">
+                  <Pencil size={14} />
+                </Link>
+                <button
+                  className="btn-icon danger"
+                  title="Smazat osobu"
+                  onClick={() => requestDelete(item)}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
             </div>
+          ))}
+        </div>
 
-            <div>
-              <div className="invoice-product">{item.name}</div>
-              {item.identificationNumber && (
-                <div style={{
-                  fontSize: "0.78rem",
-                  color: "var(--color-text-dim)",
-                  marginTop: "0.1rem",
-                }}>
-                  IČO: {item.identificationNumber}
-                  {item.city && (
-                    <span style={{ marginLeft: "0.75rem" }}>{item.city}</span>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="invoice-actions">
-              <Link to={"/persons/show/" + item._id} className="btn-icon info" title="Detail">
-                <Eye size={14} />
-              </Link>
-              <Link to={"/persons/edit/" + item._id} className="btn-icon warning" title="Upravit">
-                <Pencil size={14} />
-              </Link>
-              <button className="btn-icon danger" title="Smazat" onClick={() => handleDelete(item)}>
-                <Trash2 size={14} />
-              </button>
-            </div>
-          </div>
-        ))}
+        <div style={{ marginTop: "1rem" }}>
+          <Link to="/persons/create" className="btn-outline">
+            <Plus size={14} /> Nová osoba
+          </Link>
+        </div>
       </div>
-
-      <div style={{ marginTop: "1rem" }}>
-        <Link to="/persons/create" className="btn-outline">
-          <Plus size={14} /> Nová osoba
-        </Link>
-      </div>
-    </div>
+    </>
   );
 };
 

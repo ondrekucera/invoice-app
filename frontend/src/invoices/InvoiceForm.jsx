@@ -42,7 +42,6 @@ const InvoiceForm = () => {
     }
   }, [id]);
 
-  /* Funkční update – closure se nevztahuje na zastaralý stav */
   const handleChange = (field) => (e) => {
     const value = e.target.value;
     setInvoice(prev => ({ ...prev, [field]: value }));
@@ -69,11 +68,14 @@ const InvoiceForm = () => {
     <div>
       <div className="page-header">
         <div className="page-header-left">
-          <div className="page-eyebrow">Faktura</div>
+          <div className="page-eyebrow">Faktury</div>
           <h1 className="page-title">{isEditing ? "Upravit fakturu" : "Nová faktura"}</h1>
+          {isEditing && invoice.product && (
+            <div className="page-sub">{invoice.product}</div>
+          )}
         </div>
         <Link to="/invoices" className="btn-outline">
-          <ArrowLeft size={14} /> Zpět
+          <ArrowLeft size={14} /> Zpět na faktury
         </Link>
       </div>
 
@@ -81,7 +83,6 @@ const InvoiceForm = () => {
 
       <div className="form-card">
         <form onSubmit={handleSubmit}>
-          {/* Základní informace */}
           <div className="form-section-label">Základní informace</div>
           <div className="form-grid">
             <div className="form-group">
@@ -153,7 +154,6 @@ const InvoiceForm = () => {
             </div>
           </div>
 
-          {/* Smluvní strany */}
           <div className="form-section-label" style={{ marginTop: "0.75rem" }}>Smluvní strany</div>
           <div className="form-grid">
             <div className="form-group">
@@ -186,7 +186,6 @@ const InvoiceForm = () => {
             </div>
           </div>
 
-          {/* Poznámka */}
           <div className="form-section-label" style={{ marginTop: "0.75rem" }}>Doplňující informace</div>
           <div className="form-group">
             <label className="form-label">Poznámka</label>
@@ -203,7 +202,7 @@ const InvoiceForm = () => {
           <div style={{ display: "flex", gap: "0.75rem" }}>
             <button type="submit" className="btn-primary" disabled={loading}>
               <Save size={15} />
-              {loading ? "Ukládám..." : "Uložit fakturu"}
+              {loading ? "Ukládám..." : (isEditing ? "Uložit změny" : "Vytvořit fakturu")}
             </button>
             <Link to="/invoices" className="btn-outline">Zrušit</Link>
           </div>

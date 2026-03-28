@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FileText, Users, BarChart2, Plus, ArrowRight,
-  TrendingUp, DollarSign, Hash,
+  TrendingUp, DollarSign, Hash, Eye,
 } from "lucide-react";
 import { apiGet } from "../utils/api";
 
@@ -31,7 +31,6 @@ const HomePage = () => {
 
   return (
     <div>
-      {/* Header */}
       <div className="page-header">
         <div className="page-header-left">
           <div className="page-eyebrow">Dashboard</div>
@@ -46,7 +45,6 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Stat cards */}
       {loading ? (
         <div className="loading-spinner"><div className="spinner" />Načítám...</div>
       ) : (
@@ -93,7 +91,6 @@ const HomePage = () => {
             </div>
           </div>
 
-          {/* Quick actions */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
             <div className="card">
               <div className="card-header">
@@ -107,7 +104,7 @@ const HomePage = () => {
                   <Users size={15} /> Nová osoba
                 </Link>
                 <Link to="/invoices/statistics" className="btn-outline" style={{ justifyContent: "center" }}>
-                  <BarChart2 size={15} /> Statistiky
+                  <BarChart2 size={15} /> Statistiky faktur
                 </Link>
               </div>
             </div>
@@ -120,6 +117,7 @@ const HomePage = () => {
                 {[
                   { to: "/invoices", icon: FileText, label: "Všechny faktury", sub: `${stats?.invoiceCount ?? 0} záznamů` },
                   { to: "/persons",  icon: Users,    label: "Seznam osob",     sub: `${persons.length} subjektů` },
+                  { to: "/invoices/statistics", icon: BarChart2, label: "Statistiky", sub: "přehled KPI" },
                 ].map(({ to, icon: Icon, label, sub }) => (
                   <Link key={to} to={to} style={{
                     display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -144,7 +142,6 @@ const HomePage = () => {
             </div>
           </div>
 
-          {/* Poslední faktury */}
           <div className="card">
             <div className="card-header">
               <span className="card-title">Poslední faktury</span>
@@ -155,7 +152,8 @@ const HomePage = () => {
 
             {invoices.length === 0 ? (
               <div style={{ textAlign: "center", padding: "2rem", color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
-                Žádné faktury zatím neexistují.
+                Žádné faktury zatím neexistují.{" "}
+                <Link to="/invoices/create" style={{ color: "var(--color-primary)" }}>Vytvořit první fakturu →</Link>
               </div>
             ) : (
               <div className="invoice-list">
@@ -173,8 +171,8 @@ const HomePage = () => {
                     </div>
                     <div className="invoice-price">{fmt(item.price)} Kč</div>
                     <div className="invoice-actions">
-                      <Link to={"/invoices/show/" + item._id} className="btn-icon info" title="Detail">
-                        <FileText size={14} />
+                      <Link to={"/invoices/show/" + item._id} className="btn-icon info" title="Detail faktury">
+                        <Eye size={14} />
                       </Link>
                     </div>
                   </div>
