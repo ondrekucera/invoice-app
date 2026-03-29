@@ -1,6 +1,7 @@
 package cz.itnetwork.entity;
 
 import cz.itnetwork.constant.Countries;
+import cz.itnetwork.constant.PersonCategory;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -45,6 +46,9 @@ public class PersonEntity {
     private Countries country;
 
     private String note;
+
+    @Enumerated(EnumType.STRING)
+    private PersonCategory category;
 
     @Column(nullable = false)
     private boolean hidden = false;

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   FileText, Users, BarChart2, Plus, ArrowRight,
-  TrendingUp, DollarSign, Hash, Eye,
+  TrendingUp, DollarSign, Hash, Eye, RefreshCw,
 } from "lucide-react";
 import { apiGet } from "../utils/api";
 
@@ -11,8 +11,11 @@ const HomePage = () => {
   const [invoices, setInvoices] = useState([]);
   const [persons, setPersons]   = useState([]);
   const [loading, setLoading]   = useState(true);
+  const [error,   setError]     = useState(false);
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
     Promise.all([
       apiGet("/api/invoices/statistics"),
       apiGet("/api/invoices"),
@@ -24,8 +27,10 @@ const HomePage = () => {
         setPersons(per);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => { setError(true); setLoading(false); });
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const fmt = (n) => Number(n ?? 0).toLocaleString("cs-CZ");
 
@@ -47,6 +52,18 @@ const HomePage = () => {
 
       {loading ? (
         <div className="loading-spinner"><div className="spinner" />Načítám...</div>
+      ) : error ? (
+        <div className="alert alert-danger" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+          <span>Nepodařilo se načíst data. Zkontrolujte, zda běží backend.</span>
+          <button
+            className="btn-outline"
+            onClick={loadData}
+            disabled={loading}
+            style={{ whiteSpace: "nowrap" }}
+          >
+            <RefreshCw size={14} /> Zkusit znovu
+          </button>
+        </div>
       ) : (
         <>
           <div className="stat-cards">
@@ -163,11 +180,15 @@ const HomePage = () => {
                     <div className="invoice-product">{item.product}</div>
                     <div className="invoice-person">
                       <div className="person-label">Dodavatel</div>
-                      <Link to={"/persons/show/" + item.seller._id}>{item.seller.name}</Link>
+                      {item.seller?._id
+                        ? <Link to={"/persons/show/" + item.seller._id}>{item.seller.name}</Link>
+                        : <span>{item.seller?.name ?? "—"}</span>}
                     </div>
                     <div className="invoice-person">
                       <div className="person-label">Odběratel</div>
-                      <Link to={"/persons/show/" + item.buyer._id}>{item.buyer.name}</Link>
+                      {item.buyer?._id
+                        ? <Link to={"/persons/show/" + item.buyer._id}>{item.buyer.name}</Link>
+                        : <span>{item.buyer?.name ?? "—"}</span>}
                     </div>
                     <div className="invoice-price">{fmt(item.price)} Kč</div>
                     <div className="invoice-actions">

@@ -508,6 +508,56 @@ a { text-decoration: none; color: inherit; }
 }
 
 /* =============================================
+   CATEGORY BADGE
+   ============================================= */
+.category-badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: rgba(124,58,237,0.12);
+  color: var(--color-primary);
+  border: 1px solid rgba(124,58,237,0.2);
+  white-space: nowrap;
+}
+
+/* =============================================
+   STATS TABLE (firemní obrat)
+   ============================================= */
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+}
+.stats-table th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+}
+.stats-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+.stats-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.stats-table tbody tr:hover td {
+  background: var(--bg-hover);
+}
+.stats-table-top td {
+  background: rgba(124,58,237,0.04);
+}
+
+/* =============================================
    INVOICE LIST
    ============================================= */
 .invoice-list {
@@ -713,9 +763,32 @@ a { text-decoration: none; color: inherit; }
   padding: 1rem 1.25rem;
   margin-bottom: 1.25rem;
   display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.filter-row {
+  display: flex;
   gap: 0.75rem;
   align-items: flex-end;
   flex-wrap: wrap;
+}
+
+.filter-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.filter-checkbox-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
 }
 
 /* =============================================
@@ -918,7 +991,7 @@ select.form-input option { background: var(--bg-card); color: var(--color-text);
   flex-shrink: 0;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-
+.spin { animation: spin 1s linear infinite; }
 .alert {
   padding: 0.75rem 1rem;
   border-radius: 8px;
@@ -1110,7 +1183,7 @@ select.form-input option { background: var(--bg-card); color: var(--color-text);
   .detail-grid { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
   .stat-cards { grid-template-columns: 1fr 1fr; }
-  .filter-bar { flex-direction: column; align-items: stretch; }
+  .filter-row { flex-direction: column; align-items: stretch; }
 }
 
 @media (max-width: 480px) {

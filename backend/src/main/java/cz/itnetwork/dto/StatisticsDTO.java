@@ -14,4 +14,13 @@ public class StatisticsDTO {
     private long invoicesSum;
 
     private long invoicesAverage;
+
+    // Nové pole v6
+    private long totalWithVat;
+
+    private long overdueCount;
+
+    private long thisMonthCount;
+
+    private long highestInvoice;
 }

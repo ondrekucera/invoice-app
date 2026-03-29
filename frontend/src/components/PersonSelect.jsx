@@ -22,7 +22,7 @@ const EMPTY_PERSON = {
   name: "", identificationNumber: "", taxNumber: "",
   accountNumber: "", bankCode: "", iban: "",
   telephone: "", mail: "", street: "", zip: "", city: "",
-  country: Country.CZECHIA, note: "",
+  country: Country.CZECHIA, note: "", category: null,
 };
 
 const PersonSelect = ({ label, persons, value, onChange, placeholder, onPersonCreated, fieldError }) => {

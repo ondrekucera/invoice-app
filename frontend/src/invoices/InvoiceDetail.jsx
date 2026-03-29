@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Pencil, ArrowLeft, Trash2, AlertTriangle } from "lucide-react";
-import { apiGet, apiDelete } from "../utils/api";
+import { apiGet, apiDelete, parseApiError, getErrorMessage } from "../utils/api";
 import { dateStringFormatter } from "../utils/dateStringFormatter";
 import ConfirmModal from "../components/ConfirmModal";
+import { useToast } from "../components/ToastContext";
 
 const InvoiceDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const [invoice, setInvoice]         = useState({ buyer: {}, seller: {} });
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState(null);
@@ -16,7 +18,7 @@ const InvoiceDetail = () => {
   useEffect(() => {
     apiGet("/api/invoices/" + id)
       .then(data => { setInvoice(data); setLoading(false); })
-      .catch(e   => { setError(e.message); setLoading(false); });
+      .catch(e   => { setError(getErrorMessage(e)); setLoading(false); });
   }, [id]);
 
   const handleDeleteRequest = () => setConfirmOpen(true);
@@ -24,8 +26,13 @@ const InvoiceDetail = () => {
   const handleConfirmDelete = () => {
     setConfirmOpen(false);
     apiDelete("/api/invoices/" + id)
-      .then(() => navigate("/invoices"))
-      .catch(e => alert("Chyba: " + e.message));
+      .then(() => {
+        addToast(`Faktura #${invoice.invoiceNumber} byla smazána.`, "success");
+        navigate("/invoices");
+      })
+      .catch(e => {
+        addToast(parseApiError(e).message, "error");
+      });
   };
 
   const handleCancelDelete = () => setConfirmOpen(false);

@@ -1,22 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Pencil, ArrowLeft, FileText, Trash2 } from "lucide-react";
-import { apiGet, apiDelete } from "../utils/api";
+import { apiGet, apiDelete, parseApiError, getErrorMessage } from "../utils/api";
 import Country from "./Country";
 import ConfirmModal from "../components/ConfirmModal";
+import { useToast } from "../components/ToastContext";
+import { CATEGORY_LABELS } from "./PersonForm";
 
 const PersonDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [person, setPerson]         = useState({});
-  const [loading, setLoading]       = useState(true);
-  const [error,   setError]         = useState(null);
+  const { addToast } = useToast();
+  const [person, setPerson]           = useState({});
+  const [loading, setLoading]         = useState(true);
+  const [error,   setError]           = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     apiGet("/api/persons/" + id)
       .then(data => { setPerson(data); setLoading(false); })
-      .catch(e   => { setError(e.message); setLoading(false); });
+      .catch(e   => { setError(getErrorMessage(e)); setLoading(false); });
   }, [id]);
 
   const handleDeleteRequest  = () => setConfirmOpen(true);
@@ -24,8 +27,13 @@ const PersonDetail = () => {
   const handleConfirmDelete  = () => {
     setConfirmOpen(false);
     apiDelete("/api/persons/" + id)
-      .then(() => navigate("/persons"))
-      .catch(e => alert("Chyba: " + e.message));
+      .then(() => {
+        addToast(`Osoba ${person.name} byla smazána.`, "success");
+        navigate("/persons");
+      })
+      .catch(e => {
+        addToast(parseApiError(e).message, "error");
+      });
   };
 
   if (loading)
@@ -34,7 +42,8 @@ const PersonDetail = () => {
   if (error)
     return <div className="alert alert-danger">Chyba: {error}</div>;
 
-  const country = Country.CZECHIA === person.country ? "Česká republika" : "Slovensko";
+  const countryLabel = person.country === "CZECHIA" ? "Česká republika" : person.country === "SLOVAKIA" ? "Slovensko" : (person.country ?? null);
+  const categoryLabel = person.category ? (CATEGORY_LABELS[person.category] ?? person.category) : null;
 
   return (
     <>
@@ -67,7 +76,12 @@ const PersonDetail = () => {
           <div className="page-header-left">
             <div className="page-eyebrow">Osoba</div>
             <h1 className="page-title">{person.name}</h1>
-            <div className="page-sub">IČO: {person.identificationNumber}</div>
+            <div className="page-sub" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              IČO: {person.identificationNumber}
+              {categoryLabel && (
+                <span className="category-badge">{categoryLabel}</span>
+              )}
+            </div>
           </div>
           <div className="page-actions">
             <Link to="/persons" className="btn-outline">
@@ -121,9 +135,17 @@ const PersonDetail = () => {
             <div>
               <div className="detail-label">Sídlo</div>
               <div className="detail-value">
-                {[person.street, person.city, person.zip, country].filter(Boolean).join(", ") || "—"}
+                {[person.street, person.city, person.zip, countryLabel].filter(Boolean).join(", ") || "—"}
               </div>
             </div>
+            {categoryLabel && (
+              <div>
+                <div className="detail-label">Kategorie</div>
+                <div className="detail-value">
+                  <span className="category-badge">{categoryLabel}</span>
+                </div>
+              </div>
+            )}
             {person.note && (
               <div style={{ gridColumn: "1 / -1" }}>
                 <div className="detail-label">Poznámka</div>

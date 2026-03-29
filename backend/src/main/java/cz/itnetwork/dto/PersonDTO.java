@@ -2,6 +2,7 @@ package cz.itnetwork.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import cz.itnetwork.constant.Countries;
+import cz.itnetwork.constant.PersonCategory;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -54,4 +55,7 @@ public class PersonDTO {
 
     @Size(max = 255, message = "Poznámka může mít nejvýše 255 znaků.")
     private String note;
+
+    // Kategorie osoby – přidána v6.7
+    private PersonCategory category;
 }

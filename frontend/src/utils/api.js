@@ -3,7 +3,7 @@
  *   | |    | |_ __   ___| |___      _____  _ __| | __  ___ ____
  *   | |    | | '_ \ / _ \ __\ \ /\ / / _ \| '__| |/ / / __|_  /
  *  _| |_   | | | | |  __/ |_ \ V  V / (_) | |  |   < | (__ / /
- * |_____|  |_|_| |_|\___|\__| \_/\_/ \___/|_|  |_|\_(_)___/___|
+ * |_____|  |_|_| |_|\\___|\\__| \_/\_/ \___/|_|  |_|\_(_)___/___|
  *                                _
  *              ___ ___ ___ _____|_|_ _ _____
  *             | . |  _| -_|     | | | |     |  LICENCE
@@ -20,7 +20,8 @@
  * Více informací na http://www.itnetwork.cz/licence
  */
 
-const API_URL = "http://localhost:8080";
+// API URL se načítá z .env – viz VITE_API_URL
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
 
 // Zpracuje response – při chybě vyhodí ApiError s daty z ErrorResponseDTO
 const fetchData = async (url, requestOptions) => {
@@ -87,9 +88,12 @@ export const parseApiError = (error) => {
     };
 };
 
+// Zkratka pro získání čitelné chybové zprávy – použij místo e.message
+export const getErrorMessage = (error) => parseApiError(error).message;
+
 export const apiGet = (url, params) => {
     const filteredParams = Object.fromEntries(
-        Object.entries(params || {}).filter(([_, value]) => value != null)
+        Object.entries(params || {}).filter(([_, value]) => value != null && value !== "")
     );
     const apiUrl = `${url}?${new URLSearchParams(filteredParams)}`;
     return fetchData(apiUrl, { method: "GET" });

@@ -2,21 +2,14 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, Pencil, Trash2, Plus, User } from "lucide-react";
 import ConfirmModal from "../components/ConfirmModal";
+import { CATEGORY_LABELS } from "./PersonForm";
 
-/**
- * Props:
- *   items         – aktuálně zobrazená stránka
- *   deletePerson  – callback pro smazání
- *   totalFiltered – počet po filtraci (pro info řádek)
- *   totalAll      – celkový počet bez filtru
- *   isFiltered    – příznak aktivního filtru
- */
 const PersonTable = ({ items, deletePerson, totalFiltered, totalAll, isFiltered }) => {
   const [pendingDeleteItem, setPendingDeleteItem] = useState(null);
 
-  const requestDelete    = (item) => setPendingDeleteItem(item);
-  const handleCancel     = ()     => setPendingDeleteItem(null);
-  const handleConfirm    = ()     => {
+  const requestDelete = (item) => setPendingDeleteItem(item);
+  const handleCancel  = ()     => setPendingDeleteItem(null);
+  const handleConfirm = ()     => {
     deletePerson(pendingDeleteItem._id);
     setPendingDeleteItem(null);
   };
@@ -108,7 +101,14 @@ const PersonTable = ({ items, deletePerson, totalFiltered, totalAll, isFiltered 
               </div>
 
               <div>
-                <div className="invoice-product">{item.name}</div>
+                <div className="invoice-product" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  {item.name}
+                  {item.category && (
+                    <span className="category-badge">
+                      {CATEGORY_LABELS[item.category] ?? item.category}
+                    </span>
+                  )}
+                </div>
                 {item.identificationNumber && (
                   <div style={{
                     fontSize: "0.78rem",
@@ -124,12 +124,16 @@ const PersonTable = ({ items, deletePerson, totalFiltered, totalAll, isFiltered 
               </div>
 
               <div className="invoice-actions">
-                <Link to={"/persons/show/" + item._id} className="btn-icon info" title="Detail osoby">
-                  <Eye size={14} />
-                </Link>
-                <Link to={"/persons/edit/" + item._id} className="btn-icon warning" title="Upravit osobu">
-                  <Pencil size={14} />
-                </Link>
+                {item._id && (
+                  <Link to={"/persons/show/" + item._id} className="btn-icon info" title="Detail osoby">
+                    <Eye size={14} />
+                  </Link>
+                )}
+                {item._id && (
+                  <Link to={"/persons/edit/" + item._id} className="btn-icon warning" title="Upravit osobu">
+                    <Pencil size={14} />
+                  </Link>
+                )}
                 <button
                   className="btn-icon danger"
                   title="Smazat osobu"

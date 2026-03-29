@@ -30,7 +30,7 @@ const InvoiceForm = () => {
   };
 
   useEffect(() => {
-    apiGet("/api/persons").then(setPersons);
+    apiGet("/api/persons").then(setPersons).catch(() => {});
     if (isEditing) {
       apiGet("/api/invoices/" + id)
         .then(data => {

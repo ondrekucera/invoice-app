@@ -1,6 +1,7 @@
 package cz.itnetwork.service;
 
 import cz.itnetwork.dto.PersonDTO;
+import cz.itnetwork.dto.PersonFilterDTO;
 import cz.itnetwork.dto.mapper.PersonMapper;
 import cz.itnetwork.entity.PersonEntity;
 import cz.itnetwork.entity.repository.PersonRepository;
@@ -33,10 +34,14 @@ class PersonServiceImplTest {
     void getAll_returnsOnlyVisiblePersons() {
         PersonEntity visible = new PersonEntity();
         visible.setHidden(false);
-        when(personRepository.findByHidden(false)).thenReturn(List.of(visible));
+        // getAll(filter) nyní používá Specification – mockujeme findAll(spec)
+        when(personRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class)))
+                .thenReturn(List.of(visible));
         when(personMapper.toDTO(visible)).thenReturn(new PersonDTO());
-        assertEquals(1, personService.getAll().size());
-        verify(personRepository).findByHidden(false);
+
+        List<PersonDTO> result = personService.getAll(new PersonFilterDTO());
+        assertEquals(1, result.size());
+        verify(personRepository).findAll(any(org.springframework.data.jpa.domain.Specification.class));
     }
 
     @Test

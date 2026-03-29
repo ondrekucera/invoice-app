@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Eye, Pencil, Trash2, Plus } from "lucide-react";
+import { Eye, Pencil, Trash2, Plus, AlertTriangle } from "lucide-react";
 import { apiDelete, parseApiError } from "../utils/api";
 import { dateStringFormatter } from "../utils/dateStringFormatter";
 import ConfirmModal from "../components/ConfirmModal";
@@ -120,43 +120,56 @@ const InvoiceTable = ({ items, totalFiltered, totalAll, isFiltered, onDelete, on
 
               <div className="invoice-product">
                 <span>{item.product}</span>
-                {item.issued && (
-                  <span className="invoice-date-badge">
-                    {dateStringFormatter(item.issued, true)}
-                  </span>
-                )}
+                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+                  {item.issued && (
+                    <span className="invoice-date-badge">
+                      {dateStringFormatter(item.issued, true)}
+                    </span>
+                  )}
+                  {item.dueDate && new Date(item.dueDate) < new Date() && (
+                    <span className="due-date-warning" title="Po splatnosti">
+                      <AlertTriangle size={11} /> Po splatnosti
+                    </span>
+                  )}
+                </span>
               </div>
 
               <div className="invoice-person">
                 <div className="person-label">Dodavatel</div>
-                <Link to={"/persons/show/" + item.seller._id}>
-                  {item.seller.name}
-                </Link>
+                {item.seller?._id
+                  ? <Link to={"/persons/show/" + item.seller._id}>{item.seller.name}</Link>
+                  : <span>{item.seller?.name ?? "—"}</span>}
               </div>
 
               <div className="invoice-person">
                 <div className="person-label">Odběratel</div>
-                <Link to={"/persons/show/" + item.buyer._id}>
-                  {item.buyer.name}
-                </Link>
+                {item.buyer?._id
+                  ? <Link to={"/persons/show/" + item.buyer._id}>{item.buyer.name}</Link>
+                  : <span>{item.buyer?.name ?? "—"}</span>}
               </div>
 
               <div className="invoice-price">{fmt(item.price)} Kč</div>
 
               <div className="invoice-actions">
-                <Link to={"/invoices/show/" + item._id} className="btn-icon info" title="Detail faktury">
-                  <Eye size={14} />
-                </Link>
-                <Link to={"/invoices/edit/" + item._id} className="btn-icon warning" title="Upravit fakturu">
-                  <Pencil size={14} />
-                </Link>
-                <button
-                  className="btn-icon danger"
-                  title="Smazat fakturu"
-                  onClick={() => requestDelete(item._id)}
-                >
-                  <Trash2 size={14} />
-                </button>
+                {item._id && (
+                  <Link to={"/invoices/show/" + item._id} className="btn-icon info" title="Detail faktury">
+                    <Eye size={14} />
+                  </Link>
+                )}
+                {item._id && (
+                  <Link to={"/invoices/edit/" + item._id} className="btn-icon warning" title="Upravit fakturu">
+                    <Pencil size={14} />
+                  </Link>
+                )}
+                {item._id && (
+                  <button
+                    className="btn-icon danger"
+                    title="Smazat fakturu"
+                    onClick={() => requestDelete(item._id)}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
             </div>
           ))}

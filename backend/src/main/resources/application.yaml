@@ -1,6 +1,7 @@
 # =============================================================
-#  Invoice App – v5.6.3
+#  Okvion – FINAL
 #  Databáze: MySQL přes XAMPP
+#  Backend:  Spring Boot 3 na portu 8080
 #  Frontend: React (Vite) na portu 5173
 # =============================================================
 
@@ -21,10 +22,10 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         dialect: org.hibernate.dialect.MySQLDialect
 
   # --- JSON ---

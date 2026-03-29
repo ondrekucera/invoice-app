@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -164,9 +165,20 @@ public class InvoiceServiceImpl implements InvoiceService {
     // Statistiky počítáme přímo v DB – nevytahujeme všechny entity do paměti
     @Override
     public StatisticsDTO getStatistics() {
-        long count = invoiceRepository.countAll();
-        long sum = invoiceRepository.sumAllPrices();
+        LocalDate today     = LocalDate.now();
+        LocalDate monthFrom = today.withDayOfMonth(1);
+        LocalDate monthTo   = today.withDayOfMonth(today.lengthOfMonth());
+
+        long count   = invoiceRepository.countAll();
+        long sum     = invoiceRepository.sumAllPrices();
         long average = count > 0 ? sum / count : 0;
-        return new StatisticsDTO(count, sum, average);
+
+        // totalWithVat – bezpečně přes double, zaokrouhlíme na celé Kč
+        long totalWithVat   = Math.round(invoiceRepository.sumAllPricesWithVatRaw());
+        long overdueCount   = invoiceRepository.countOverdue(today);
+        long thisMonthCount = invoiceRepository.countInPeriod(monthFrom, monthTo);
+        long highestInvoice = invoiceRepository.maxPrice();
+
+        return new StatisticsDTO(count, sum, average, totalWithVat, overdueCount, thisMonthCount, highestInvoice);
     }
 }
