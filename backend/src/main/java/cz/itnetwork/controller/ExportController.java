@@ -1,17 +1,17 @@
 package cz.itnetwork.controller;
 
 import cz.itnetwork.dto.InvoiceDTO;
-import cz.itnetwork.dto.InvoiceFilterDTO;
 import cz.itnetwork.dto.PersonDTO;
+import cz.itnetwork.dto.InvoiceFilterDTO;
 import cz.itnetwork.dto.PersonFilterDTO;
 import cz.itnetwork.service.InvoiceService;
 import cz.itnetwork.service.PersonService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -19,73 +19,74 @@ import java.util.List;
 @RequestMapping("/api/export")
 public class ExportController {
 
-    private static final String UTF8_BOM = "\uFEFF"; // BOM pro správné otevření v MS Excel
+    /** UTF-8 BOM ensures correct encoding when opening in MS Excel. */
+    private static final String UTF8_BOM = "\uFEFF";
 
-    @Autowired
-    private PersonService personService;
+    private final PersonService personService;
+    private final InvoiceService invoiceService;
 
-    @Autowired
-    private InvoiceService invoiceService;
-
-    // --- OSOBY ---
+    public ExportController(PersonService personService, InvoiceService invoiceService) {
+        this.personService  = personService;
+        this.invoiceService = invoiceService;
+    }
 
     @GetMapping("/persons/csv")
     public ResponseEntity<byte[]> exportPersonsCsv() {
         List<PersonDTO> persons = personService.getAll(new PersonFilterDTO());
 
-        StringBuilder sb = new StringBuilder(UTF8_BOM);
-        sb.append("id,jmeno,ico,dic,telefon,email,ulice,mesto,psc,zeme,kategorie,poznamka\n");
+        StringBuilder csv = new StringBuilder(UTF8_BOM);
+        csv.append("id,jmeno,ico,dic,telefon,email,ulice,mesto,psc,zeme,kategorie,poznamka\n");
+
         for (PersonDTO p : persons) {
-            sb.append(csv(p.getId())).append(",")
-              .append(csv(p.getName())).append(",")
-              .append(csv(p.getIdentificationNumber())).append(",")
-              .append(csv(p.getTaxNumber())).append(",")
-              .append(csv(p.getTelephone())).append(",")
-              .append(csv(p.getMail())).append(",")
-              .append(csv(p.getStreet())).append(",")
-              .append(csv(p.getCity())).append(",")
-              .append(csv(p.getZip())).append(",")
-              .append(csv(p.getCountry())).append(",")
-              .append(csv(p.getCategory())).append(",")
-              .append(csv(p.getNote())).append("\n");
+            csv.append(escapeCsvField(p.getId())).append(",")
+               .append(escapeCsvField(p.getName())).append(",")
+               .append(escapeCsvField(p.getIdentificationNumber())).append(",")
+               .append(escapeCsvField(p.getTaxNumber())).append(",")
+               .append(escapeCsvField(p.getTelephone())).append(",")
+               .append(escapeCsvField(p.getMail())).append(",")
+               .append(escapeCsvField(p.getStreet())).append(",")
+               .append(escapeCsvField(p.getCity())).append(",")
+               .append(escapeCsvField(p.getZip())).append(",")
+               .append(escapeCsvField(p.getCountry())).append(",")
+               .append(escapeCsvField(p.getCategory())).append(",")
+               .append(escapeCsvField(p.getNote())).append("\n");
         }
 
-        byte[] bytes = sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        String filename = "osoby-" + LocalDate.now() + ".csv";
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .header(HttpHeaders.CACHE_CONTROL, "no-cache")
-                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
-                .body(bytes);
+        return buildCsvResponse(csv.toString(), "osoby-" + LocalDate.now() + ".csv");
     }
-
-    // --- FAKTURY ---
 
     @GetMapping("/invoices/csv")
     public ResponseEntity<byte[]> exportInvoicesCsv() {
         List<InvoiceDTO> invoices = invoiceService.getAll(new InvoiceFilterDTO());
 
-        StringBuilder sb = new StringBuilder(UTF8_BOM);
-        sb.append("id,cislo,vystaveno,splatnost,produkt,cena,dph,dodavatel_ico,dodavatel,odberatel_ico,odberatel,poznamka\n");
+        StringBuilder csv = new StringBuilder(UTF8_BOM);
+        csv.append("id,cislo,vystaveno,splatnost,produkt,cena,dph,dodavatel_ico,dodavatel,odberatel_ico,odberatel,poznamka\n");
+
         for (InvoiceDTO i : invoices) {
-            sb.append(csv(i.getId())).append(",")
-              .append(csv(i.getInvoiceNumber())).append(",")
-              .append(csv(i.getIssued())).append(",")
-              .append(csv(i.getDueDate())).append(",")
-              .append(csv(i.getProduct())).append(",")
-              .append(csv(i.getPrice())).append(",")
-              .append(csv(i.getVat())).append(",")
-              .append(csv(i.getSeller() != null ? i.getSeller().getIdentificationNumber() : "")).append(",")
-              .append(csv(i.getSeller() != null ? i.getSeller().getName() : "")).append(",")
-              .append(csv(i.getBuyer()  != null ? i.getBuyer().getIdentificationNumber()  : "")).append(",")
-              .append(csv(i.getBuyer()  != null ? i.getBuyer().getName()  : "")).append(",")
-              .append(csv(i.getNote())).append("\n");
+            csv.append(escapeCsvField(i.getId())).append(",")
+               .append(escapeCsvField(i.getInvoiceNumber())).append(",")
+               .append(escapeCsvField(i.getIssued())).append(",")
+               .append(escapeCsvField(i.getDueDate())).append(",")
+               .append(escapeCsvField(i.getProduct())).append(",")
+               .append(escapeCsvField(i.getPrice())).append(",")
+               .append(escapeCsvField(i.getVat())).append(",")
+               .append(escapeCsvField(i.getSeller() != null ? i.getSeller().getIdentificationNumber() : "")).append(",")
+               .append(escapeCsvField(i.getSeller() != null ? i.getSeller().getName() : "")).append(",")
+               .append(escapeCsvField(i.getBuyer()  != null ? i.getBuyer().getIdentificationNumber()  : "")).append(",")
+               .append(escapeCsvField(i.getBuyer()  != null ? i.getBuyer().getName()  : "")).append(",")
+               .append(escapeCsvField(i.getNote())).append("\n");
         }
 
-        byte[] bytes = sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        String filename = "faktury-" + LocalDate.now() + ".csv";
+        return buildCsvResponse(csv.toString(), "faktury-" + LocalDate.now() + ".csv");
+    }
 
+    // ── Private helpers ──────────────────────────────────────────────────────
+
+    /**
+     * Builds a CSV download response with correct headers and UTF-8 encoding.
+     */
+    private ResponseEntity<byte[]> buildCsvResponse(String csvContent, String filename) {
+        byte[] bytes = csvContent.getBytes(StandardCharsets.UTF_8);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .header(HttpHeaders.CACHE_CONTROL, "no-cache")
@@ -93,14 +94,16 @@ public class ExportController {
                 .body(bytes);
     }
 
-    // --- helpers ---
-
-    private String csv(Object value) {
+    /**
+     * Escapes a value for RFC 4180 CSV output.
+     * Wraps fields containing commas, quotes, or line breaks in double quotes.
+     */
+    private String escapeCsvField(Object value) {
         if (value == null) return "";
-        String s = value.toString();
-        if (s.contains(",") || s.contains("\"") || s.contains("\n") || s.contains("\r")) {
-            return "\"" + s.replace("\"", "\"\"") + "\"";
+        String text = value.toString();
+        if (text.contains(",") || text.contains("\"") || text.contains("\n") || text.contains("\r")) {
+            return "\"" + text.replace("\"", "\"\"") + "\"";
         }
-        return s;
+        return text;
     }
 }

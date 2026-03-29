@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PersonDTO {
 
+    // Pole "_id" zachovává kompatibilitu s frontendem (React používá _id jako identifikátor)
     @JsonProperty("_id")
     private Long id;
 
@@ -56,6 +57,5 @@ public class PersonDTO {
     @Size(max = 255, message = "Poznámka může mít nejvýše 255 znaků.")
     private String note;
 
-    // Kategorie osoby – přidána v6.7
     private PersonCategory category;
 }

@@ -10,16 +10,24 @@ import java.util.List;
 
 public class PersonSpecification {
 
+    /**
+     * Sestaví JPA Specification pro filtrování osob.
+     * Vždy vylučuje skryté (smazané) osoby – soft delete je transparentní pro volající.
+     * Všechny ostatní filtry jsou volitelné.
+     */
     public static Specification<PersonEntity> filterBy(PersonFilterDTO filter) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Pouze viditelné osoby (soft delete)
+            // Soft delete – hidden=true znamená odstraněnou osobu, nikdy ji nezobrazujeme
             predicates.add(cb.isFalse(root.get("hidden")));
 
-            if (filter == null) return cb.and(predicates.toArray(new Predicate[0]));
+            if (filter == null) {
+                return cb.and(predicates.toArray(new Predicate[0]));
+            }
 
             if (filter.getName() != null && !filter.getName().isBlank()) {
+                // Case-insensitive LIKE – umožňuje hledat i část jména
                 predicates.add(cb.like(cb.lower(root.get("name")),
                         "%" + filter.getName().toLowerCase() + "%"));
             }

@@ -15,7 +15,7 @@ const SettingsPage = ({ theme, onThemeChange }) => {
   };
 
   return (
-    <div>
+    <div className="settings-page-layout">
       <div className="page-header">
         <div className="page-header-left">
           <div className="page-eyebrow">Aplikace</div>
@@ -24,7 +24,8 @@ const SettingsPage = ({ theme, onThemeChange }) => {
         </div>
       </div>
 
-      <div className="card" style={{ maxWidth: 560 }}>
+      <div className="settings-card-wrap">
+        <div className="card settings-card">
         <div className="card-header">
           <span className="card-title">Zobrazení</span>
         </div>
@@ -114,6 +115,7 @@ const SettingsPage = ({ theme, onThemeChange }) => {
             ))}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

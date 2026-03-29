@@ -5,6 +5,7 @@ import {
   TrendingUp, DollarSign, Hash, Eye, RefreshCw,
 } from "lucide-react";
 import { apiGet } from "../utils/api";
+import { formatCurrency } from "../utils/formatCurrency";
 
 const HomePage = () => {
   const [stats, setStats]       = useState(null);
@@ -32,7 +33,6 @@ const HomePage = () => {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const fmt = (n) => Number(n ?? 0).toLocaleString("cs-CZ");
 
   return (
     <div>
@@ -72,7 +72,7 @@ const HomePage = () => {
                 <Hash size={17} style={{ color: "var(--color-primary)" }} />
               </div>
               <div className="stat-label">Počet faktur</div>
-              <div className="stat-value">{fmt(stats?.invoiceCount)}</div>
+              <div className="stat-value">{formatCurrency(stats?.invoiceCount ?? 0)}</div>
               <div className="stat-sub">celkem evidovaných</div>
             </div>
 
@@ -82,7 +82,7 @@ const HomePage = () => {
               </div>
               <div className="stat-label">Celková částka</div>
               <div className="stat-value" style={{ fontSize: "1.45rem" }}>
-                {fmt(stats?.invoicesSum)} Kč
+                {formatCurrency(stats?.invoicesSum ?? 0)} Kč
               </div>
               <div className="stat-sub">součet všech faktur</div>
             </div>
@@ -93,7 +93,7 @@ const HomePage = () => {
               </div>
               <div className="stat-label">Průměrná faktura</div>
               <div className="stat-value" style={{ fontSize: "1.45rem" }}>
-                {fmt(stats?.invoicesAverage)} Kč
+                {formatCurrency(stats?.invoicesAverage ?? 0)} Kč
               </div>
               <div className="stat-sub">průměrná hodnota</div>
             </div>
@@ -190,7 +190,7 @@ const HomePage = () => {
                         ? <Link to={"/persons/show/" + item.buyer._id}>{item.buyer.name}</Link>
                         : <span>{item.buyer?.name ?? "—"}</span>}
                     </div>
-                    <div className="invoice-price">{fmt(item.price)} Kč</div>
+                    <div className="invoice-price">{formatCurrency(item.price)} Kč</div>
                     <div className="invoice-actions">
                       <Link to={"/invoices/show/" + item._id} className="btn-icon info" title="Detail faktury">
                         <Eye size={14} />

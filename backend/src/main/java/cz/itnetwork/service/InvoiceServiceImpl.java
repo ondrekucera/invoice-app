@@ -11,7 +11,6 @@ import cz.itnetwork.entity.repository.InvoiceSpecification;
 import cz.itnetwork.entity.repository.PersonRepository;
 import cz.itnetwork.exception.BusinessException;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -23,65 +22,46 @@ import java.util.stream.Collectors;
 @Service
 public class InvoiceServiceImpl implements InvoiceService {
 
-    @Autowired
-    private InvoiceMapper invoiceMapper;
+    private final InvoiceMapper invoiceMapper;
+    private final InvoiceRepository invoiceRepository;
+    private final PersonRepository personRepository;
 
-    @Autowired
-    private InvoiceRepository invoiceRepository;
-
-    @Autowired
-    private PersonRepository personRepository;
-
-    // Ověří business pravidla faktury – volá se při vytvoření i aktualizaci
-    private void validateInvoice(InvoiceDTO invoiceDTO) {
-        if (invoiceDTO.getBuyer() == null) {
-            throw new BusinessException("Kupující je povinný.");
-        }
-        if (invoiceDTO.getSeller() == null) {
-            throw new BusinessException("Prodávající je povinný.");
-        }
-        if (invoiceDTO.getBuyer().getId() == null) {
-            throw new BusinessException("Kupující musí mít platné ID.");
-        }
-        if (invoiceDTO.getSeller().getId() == null) {
-            throw new BusinessException("Prodávající musí mít platné ID.");
-        }
-        // Kupující a prodávající musí být různé osoby
-        if (invoiceDTO.getBuyer().getId().equals(invoiceDTO.getSeller().getId())) {
-            throw new BusinessException("Kupující a prodávající nesmí být stejná osoba.");
-        }
-        // Splatnost nesmí být před datem vystavení
-        if (invoiceDTO.getDueDate().isBefore(invoiceDTO.getIssued())) {
-            throw new BusinessException("Datum splatnosti nesmí být před datem vystavení.");
-        }
-        if (invoiceDTO.getPrice() < 0) {
-            throw new BusinessException("Cena nesmí být záporná.");
-        }
-        if (invoiceDTO.getVat() < 0) {
-            throw new BusinessException("DPH nesmí být záporné.");
-        }
+    public InvoiceServiceImpl(
+            InvoiceMapper invoiceMapper,
+            InvoiceRepository invoiceRepository,
+            PersonRepository personRepository
+    ) {
+        this.invoiceMapper     = invoiceMapper;
+        this.invoiceRepository = invoiceRepository;
+        this.personRepository  = personRepository;
     }
 
     @Override
     public InvoiceDTO addInvoice(InvoiceDTO invoiceDTO) {
-        validateInvoice(invoiceDTO);
+        validateInvoiceBusinessRules(invoiceDTO);
+        InvoiceEntity entity = buildInvoiceEntity(invoiceDTO);
+        return invoiceMapper.toDTO(invoiceRepository.save(entity));
+    }
 
-        InvoiceEntity entity = invoiceMapper.toEntity(invoiceDTO);
+    @Override
+    public List<InvoiceDTO> addInvoicesBulk(List<InvoiceDTO> invoiceDTOs) {
+        if (invoiceDTOs == null || invoiceDTOs.isEmpty()) {
+            throw new BusinessException("Seznam faktur nesmí být prázdný.");
+        }
 
-        long buyerId = invoiceDTO.getBuyer().getId();
-        long sellerId = invoiceDTO.getSeller().getId();
+        // Validujeme a sestavujeme entity před uložením – chyba u jedné faktury zastaví celý bulk
+        List<InvoiceEntity> entities = invoiceDTOs.stream()
+                .map(dto -> {
+                    validateInvoiceBusinessRules(dto);
+                    return buildInvoiceEntity(dto);
+                })
+                .collect(Collectors.toList());
 
-        // Načtení skutečných entit z DB – mapper mapuje pouze ID
-        PersonEntity buyer = personRepository.findById(buyerId)
-                .orElseThrow(() -> new EntityNotFoundException("Kupující s id " + buyerId + " nebyl nalezen."));
-        PersonEntity seller = personRepository.findById(sellerId)
-                .orElseThrow(() -> new EntityNotFoundException("Prodávající s id " + sellerId + " nebyl nalezen."));
+        List<InvoiceEntity> saved = invoiceRepository.saveAll(entities);
 
-        entity.setBuyer(buyer);
-        entity.setSeller(seller);
-
-        entity = invoiceRepository.save(entity);
-        return invoiceMapper.toDTO(entity);
+        return saved.stream()
+                .map(invoiceMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -93,15 +73,15 @@ public class InvoiceServiceImpl implements InvoiceService {
     public List<InvoiceDTO> getAll(InvoiceFilterDTO filter) {
         Specification<InvoiceEntity> spec = InvoiceSpecification.filterBy(filter);
 
-        List<InvoiceEntity> result;
-        // Limit se aplikuje jako page(0) – vrátí pouze prvních N záznamů
+        List<InvoiceEntity> invoices;
         if (filter != null && filter.getLimit() != null && filter.getLimit() > 0) {
-            result = invoiceRepository.findAll(spec, PageRequest.of(0, filter.getLimit())).getContent();
+            // Limit se realizuje jako první stránka – nevytahujeme celou tabulku do paměti
+            invoices = invoiceRepository.findAll(spec, PageRequest.of(0, filter.getLimit())).getContent();
         } else {
-            result = invoiceRepository.findAll(spec);
+            invoices = invoiceRepository.findAll(spec);
         }
 
-        return result.stream()
+        return invoices.stream()
                 .map(invoiceMapper::toDTO)
                 .collect(Collectors.toList());
     }
@@ -124,18 +104,10 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     public InvoiceDTO updateInvoice(long id, InvoiceDTO invoiceDTO) {
-        validateInvoice(invoiceDTO);
+        validateInvoiceBusinessRules(invoiceDTO);
 
+        // Načteme existující entitu, abychom přepsali pouze předaná pole a zachovali metadata
         InvoiceEntity entity = fetchInvoiceById(id);
-
-        long buyerId = invoiceDTO.getBuyer().getId();
-        long sellerId = invoiceDTO.getSeller().getId();
-
-        PersonEntity buyer = personRepository.findById(buyerId)
-                .orElseThrow(() -> new EntityNotFoundException("Kupující s id " + buyerId + " nebyl nalezen."));
-        PersonEntity seller = personRepository.findById(sellerId)
-                .orElseThrow(() -> new EntityNotFoundException("Prodávající s id " + sellerId + " nebyl nalezen."));
-
         entity.setInvoiceNumber(invoiceDTO.getInvoiceNumber());
         entity.setIssued(invoiceDTO.getIssued());
         entity.setDueDate(invoiceDTO.getDueDate());
@@ -143,42 +115,94 @@ public class InvoiceServiceImpl implements InvoiceService {
         entity.setPrice(invoiceDTO.getPrice());
         entity.setVat(invoiceDTO.getVat());
         entity.setNote(invoiceDTO.getNote());
-        entity.setBuyer(buyer);
-        entity.setSeller(seller);
+        entity.setBuyer(resolvePersonById(invoiceDTO.getBuyer().getId(), "Kupující"));
+        entity.setSeller(resolvePersonById(invoiceDTO.getSeller().getId(), "Prodávající"));
 
-        entity = invoiceRepository.save(entity);
-        return invoiceMapper.toDTO(entity);
+        return invoiceMapper.toDTO(invoiceRepository.save(entity));
     }
 
     @Override
     public void deleteInvoice(long id) {
-        InvoiceEntity entity = fetchInvoiceById(id);
-        invoiceRepository.delete(entity);
+        invoiceRepository.delete(fetchInvoiceById(id));
     }
 
-    // Společná metoda pro načtení faktury – vyhodí 404 pokud neexistuje
-    private InvoiceEntity fetchInvoiceById(long id) {
-        return invoiceRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Faktura s id " + id + " nebyla nalezena."));
-    }
-
-    // Statistiky počítáme přímo v DB – nevytahujeme všechny entity do paměti
     @Override
     public StatisticsDTO getStatistics() {
         LocalDate today     = LocalDate.now();
         LocalDate monthFrom = today.withDayOfMonth(1);
         LocalDate monthTo   = today.withDayOfMonth(today.lengthOfMonth());
 
-        long count   = invoiceRepository.countAll();
-        long sum     = invoiceRepository.sumAllPrices();
-        long average = count > 0 ? sum / count : 0;
-
-        // totalWithVat – bezpečně přes double, zaokrouhlíme na celé Kč
+        long count          = invoiceRepository.countAll();
+        long sum            = invoiceRepository.sumAllPrices();
+        // Průměr chráníme proti dělení nulou pro případ prázdné databáze
+        long average        = count > 0 ? sum / count : 0;
+        // SUM s DPH vrací double – zaokrouhlujeme na celé Kč
         long totalWithVat   = Math.round(invoiceRepository.sumAllPricesWithVatRaw());
         long overdueCount   = invoiceRepository.countOverdue(today);
         long thisMonthCount = invoiceRepository.countInPeriod(monthFrom, monthTo);
         long highestInvoice = invoiceRepository.maxPrice();
 
         return new StatisticsDTO(count, sum, average, totalWithVat, overdueCount, thisMonthCount, highestInvoice);
+    }
+
+    // ── Private helpers ──────────────────────────────────────────────────────
+
+    /**
+     * Sestaví InvoiceEntity z DTO včetně načtení skutečných Person entit z DB.
+     * Sdílená logika pro addInvoice i addInvoicesBulk – eliminuje duplicitu.
+     */
+    private InvoiceEntity buildInvoiceEntity(InvoiceDTO invoiceDTO) {
+        InvoiceEntity entity = invoiceMapper.toEntity(invoiceDTO);
+        // Mapper přenáší pouze ID – skutečné entity načítáme z DB, aby JPA vztahy fungovaly správně
+        entity.setBuyer(resolvePersonById(invoiceDTO.getBuyer().getId(), "Kupující"));
+        entity.setSeller(resolvePersonById(invoiceDTO.getSeller().getId(), "Prodávající"));
+        return entity;
+    }
+
+    /**
+     * Ověří business pravidla faktury – volá se při vytvoření i aktualizaci.
+     * Bean Validation (@NotNull, @DecimalMin) pokrývá základní kontroly;
+     * tato metoda přidává logiku závislou na kombinaci více polí.
+     */
+    private void validateInvoiceBusinessRules(InvoiceDTO invoiceDTO) {
+        if (invoiceDTO.getBuyer() == null || invoiceDTO.getBuyer().getId() == null) {
+            throw new BusinessException("Kupující je povinný a musí mít platné ID.");
+        }
+        if (invoiceDTO.getSeller() == null || invoiceDTO.getSeller().getId() == null) {
+            throw new BusinessException("Prodávající je povinný a musí mít platné ID.");
+        }
+        // Zabraňuje tomu, aby kupující a prodávající byli stejná osoba
+        if (invoiceDTO.getBuyer().getId().equals(invoiceDTO.getSeller().getId())) {
+            throw new BusinessException("Kupující a prodávající nesmí být stejná osoba.");
+        }
+        // Splatnost logicky nemůže předcházet datu vystavení
+        if (invoiceDTO.getDueDate().isBefore(invoiceDTO.getIssued())) {
+            throw new BusinessException("Datum splatnosti nesmí být před datem vystavení.");
+        }
+        if (invoiceDTO.getPrice() < 0) {
+            throw new BusinessException("Cena nesmí být záporná.");
+        }
+        if (invoiceDTO.getVat() < 0) {
+            throw new BusinessException("DPH nesmí být záporné.");
+        }
+    }
+
+    /**
+     * Načte osobu podle ID nebo vyhodí výjimku s kontextovou zprávou (role = "Kupující" / "Prodávající").
+     * Odděluje lookup logiku od míst volání, aby chybové zprávy byly srozumitelné.
+     */
+    private PersonEntity resolvePersonById(Long personId, String role) {
+        return personRepository.findById(personId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        role + " s id " + personId + " nebyl(a) nalezen(a)."
+                ));
+    }
+
+    /** Načte fakturu nebo vyhodí 404. Centralizuje opakující se lookup vzor. */
+    private InvoiceEntity fetchInvoiceById(long id) {
+        return invoiceRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Faktura s id " + id + " nebyla nalezena."
+                ));
     }
 }

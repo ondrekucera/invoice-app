@@ -1,40 +1,21 @@
-/*  _____ _______         _                      _
- * |_   _|__   __|       | |                    | |
- *   | |    | |_ __   ___| |___      _____  _ __| | __  ___ ____
- *   | |    | | '_ \ / _ \ __\ \ /\ / / _ \| '__| |/ / / __|_  /
- *  _| |_   | | | | |  __/ |_ \ V  V / (_) | |  |   < | (__ / /
- * |_____|  |_|_| |_|\\___|\\__| \_/\_/ \___/|_|  |_|\_(_)___/___|
- *                                _
- *              ___ ___ ___ _____|_|_ _ _____
- *             | . |  _| -_|     | | | |     |  LICENCE
- *             |  _|_| |___|_|_|_|_|___|_|_|_|
- *             |_|
- *
- *   PROGRAMOVÁNÍ  <>  DESIGN  <>  PRÁCE/PODNIKÁNÍ  <>  HW A SW
- *
- * Tento zdrojový kód je součástí výukových seriálů na
- * IT sociální síti WWW.ITNETWORK.CZ
- *
- * Kód spadá pod licenci prémiového obsahu a vznikl díky podpoře
- * našich členů. Je určen pouze pro osobní užití a nesmí být šířen.
- * Více informací na http://www.itnetwork.cz/licence
- */
-
-// API URL se načítá z .env – viz VITE_API_URL
+// API URL se načítá z .env souboru – viz VITE_API_URL
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
 
-// Zpracuje response – při chybě vyhodí ApiError s daty z ErrorResponseDTO
+/**
+ * Interní fetch wrapper. Zpracovává JSON odpovědi a při chybě vyhazuje ApiError.
+ * DELETE požadavky očekávají 204 No Content – tělo odpovědi se nečte.
+ */
 const fetchData = async (url, requestOptions) => {
-    const apiUrl = `${API_URL}${url}`;
+    const fullUrl = `${API_URL}${url}`;
 
     let response;
     try {
-        response = await fetch(apiUrl, requestOptions);
-    } catch (networkError) {
+        response = await fetch(fullUrl, requestOptions);
+    } catch {
+        // Síťová chyba (server nedostupný, CORS, timeout)
         throw new ApiError("Server není dostupný. Zkontrolujte připojení.", null, null);
     }
 
-    // DELETE vrací 204 No Content – tělo neočekáváme
     if (requestOptions.method === "DELETE") {
         if (!response.ok) {
             let data = null;
@@ -55,7 +36,7 @@ const fetchData = async (url, requestOptions) => {
     }
 
     if (!response.ok) {
-        // Pokud backend vrátil validationErrors (400), předáme je celé
+        // HTTP 400 může obsahovat validationErrors – předáme je celé pro zobrazení ve formuláři
         const validationErrors = data?.validationErrors ?? null;
         const message = data?.message || `Chyba: ${response.status}`;
         throw new ApiError(message, validationErrors, response.status);
@@ -64,57 +45,58 @@ const fetchData = async (url, requestOptions) => {
     return data;
 };
 
-// Vlastní třída chyby – nese message, validationErrors a HTTP status
+/**
+ * Vlastní třída chyby – nese message, validationErrors a HTTP status vedle sebe.
+ * Umožňuje volajícímu rozlišit typ chyby bez parsování zprávy.
+ */
 export class ApiError extends Error {
     constructor(message, validationErrors = null, status = null) {
         super(message);
-        this.name = "ApiError";
+        this.name             = "ApiError";
         this.validationErrors = validationErrors;
-        this.status = status;
+        this.status           = status;
     }
 }
 
-// Helper pro formuláře – extrahuje message a validationErrors z chyby
+/** Extrahuje message a validationErrors z libovolné vyhozené chyby. Použij v submit handlerech. */
 export const parseApiError = (error) => {
     if (error instanceof ApiError) {
         return {
-            message: error.message,
+            message:          error.message,
             validationErrors: error.validationErrors || null,
         };
     }
     return {
-        message: error?.message || "Neznámá chyba.",
+        message:          error?.message || "Neznámá chyba.",
         validationErrors: null,
     };
 };
 
-// Zkratka pro získání čitelné chybové zprávy – použij místo e.message
+/** Zkratka pro získání čitelné chybové zprávy. */
 export const getErrorMessage = (error) => parseApiError(error).message;
 
 export const apiGet = (url, params) => {
+    // Vyfiltrujeme null/undefined/prázdné hodnoty – nevznikají zbytečné query parametry
     const filteredParams = Object.fromEntries(
-        Object.entries(params || {}).filter(([_, value]) => value != null && value !== "")
+        Object.entries(params || {}).filter(([, value]) => value != null && value !== "")
     );
-    const apiUrl = `${url}?${new URLSearchParams(filteredParams)}`;
-    return fetchData(apiUrl, { method: "GET" });
+    const queryString = new URLSearchParams(filteredParams).toString();
+    return fetchData(`${url}?${queryString}`, { method: "GET" });
 };
 
-export const apiPost = (url, data) => {
-    return fetchData(url, {
-        method: "POST",
+export const apiPost = (url, data) =>
+    fetchData(url, {
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body:    JSON.stringify(data),
     });
-};
 
-export const apiPut = (url, data) => {
-    return fetchData(url, {
-        method: "PUT",
+export const apiPut = (url, data) =>
+    fetchData(url, {
+        method:  "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body:    JSON.stringify(data),
     });
-};
 
-export const apiDelete = (url) => {
-    return fetchData(url, { method: "DELETE" });
-};
+export const apiDelete = (url) =>
+    fetchData(url, { method: "DELETE" });

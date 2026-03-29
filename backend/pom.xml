@@ -80,6 +80,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- H2 in-memory DB pro unit/integration testy – nepoužívá se v produkci -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>

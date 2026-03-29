@@ -1,11 +1,12 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { Save, ArrowLeft } from "lucide-react";
 import { apiGet, apiPost, apiPut, parseApiError } from "../utils/api";
+import { useFieldRefs } from "../components/useFieldRefs";
 import CountrySelect from "../components/CountrySelect";
 import { useToast } from "../components/ToastContext";
 
-// Mapování kategorií – enum hodnota → český popis
+/** Maps category enum values to Czech labels for the select dropdown. */
 export const CATEGORY_LABELS = {
   IT:        "IT",
   MARKETING: "Marketing",
@@ -14,7 +15,15 @@ export const CATEGORY_LABELS = {
   OSTATNI:   "Ostatní",
 };
 
-// Field musí být mimo komponentu – jinak React remountuje při každém renderu (ztráta focusu)
+const FIELD_FOCUS_ORDER = [
+  "name", "identificationNumber", "taxNumber", "accountNumber",
+  "bankCode", "iban", "telephone", "mail", "street", "city", "zip", "country",
+];
+
+/**
+ * Reusable labeled text input for person form fields.
+ * Defined outside the component to avoid re-mounting on each render.
+ */
 const Field = ({ label, required, placeholder, type = "text", value, onChange, fieldError, fieldRef }) => (
   <div className="form-group">
     <label className="form-label">
@@ -34,10 +43,11 @@ const Field = ({ label, required, placeholder, type = "text", value, onChange, f
 );
 
 const PersonForm = () => {
-  const navigate   = useNavigate();
-  const { id }     = useParams();
-  const isEditing  = !!id;
+  const navigate  = useNavigate();
+  const { id }    = useParams();
+  const isEditing = !!id;
   const { addToast, updateToast } = useToast();
+  const { fieldRefs, getRef } = useFieldRefs();
 
   const [person, setPerson] = useState({
     name: "", identificationNumber: "", taxNumber: "",
@@ -52,74 +62,78 @@ const PersonForm = () => {
   const [fetchLoading,     setFetchLoading]     = useState(isEditing);
   const [error,            setError]            = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
-  const [pulseFields,      setPulseFields]      = useState({});
-
-  const fieldRefs = useRef({});
-  const getRef = (name) => {
-    if (!fieldRefs.current[name]) fieldRefs.current[name] = React.createRef();
-    return fieldRefs.current[name];
-  };
 
   useEffect(() => {
     if (id) {
       apiGet("/api/persons/" + id)
-        .then(data  => { setPerson({ ...data, category: data.category ?? "" }); setFetchLoading(false); })
-        .catch(e    => { setError(parseApiError(e).message); setFetchLoading(false); });
+        .then(data => {
+          // Backend může vracet category: null – pro select potřebujeme prázdný string
+          setPerson({ ...data, category: data.category ?? "" });
+          setFetchLoading(false);
+        })
+        .catch(e => { setError(parseApiError(e).message); setFetchLoading(false); });
     }
   }, [id]);
 
+  // Vymaže chybu konkrétního pole hned při editaci – UI okamžitě reaguje
+  const clearFieldError = (field) => {
+    if (validationErrors[field]) {
+      setValidationErrors(prev => { const next = { ...prev }; delete next[field]; return next; });
+    }
+  };
+
   const handleChange = (field) => (e) => {
     setPerson(prev => ({ ...prev, [field]: e.target.value }));
-    if (validationErrors[field]) {
-      setValidationErrors(prev => { const n = {...prev}; delete n[field]; return n; });
-    }
+    clearFieldError(field);
   };
 
-  const handleCountryChange = (val) => {
-    setPerson(prev => ({ ...prev, country: val }));
-  };
+  const handleCountryChange = (val) => setPerson(prev => ({ ...prev, country: val }));
 
   const focusFirstError = useCallback((errors) => {
-    const ORDER = ["name","identificationNumber","taxNumber","accountNumber","bankCode","iban","telephone","mail","street","city","zip","country"];
-    for (const fname of ORDER) {
-      if (errors[fname]) {
-        const el = fieldRefs.current[fname]?.current;
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-          setTimeout(() => { el.focus?.(); }, 300);
-          setPulseFields(prev => ({ ...prev, [fname]: true }));
-          setTimeout(() => setPulseFields(prev => { const n={...prev}; delete n[fname]; return n; }), 1200);
-        }
-        break;
-      }
+    for (const fieldName of FIELD_FOCUS_ORDER) {
+      if (!errors[fieldName]) continue;
+      const el = fieldRefs.current[fieldName]?.current;
+      if (!el) break;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => el.focus?.(), 300);
+      break;
     }
-  }, []);
+  }, [fieldRefs]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (loading) return;
+
     setLoading(true);
     setError(null);
     setValidationErrors({});
 
-    // Odešleme null pokud kategorie nebyla vybrána
+    // Prázdný string z selectu posíláme jako null – backend odmítá prázdný enum string
     const payload = { ...person, category: person.category || null };
 
-    const toastId = addToast(isEditing ? "Ukládám osobu..." : "Vytvářím osobu...", "loading");
+    const toastId = addToast(
+      isEditing ? "Ukládám osobu..." : "Vytvářím osobu...",
+      "loading"
+    );
 
     (id ? apiPut("/api/persons/" + id, payload) : apiPost("/api/persons", payload))
       .then(() => {
-        updateToast(toastId, { message: isEditing ? "Osoba byla uložena." : "Osoba byla vytvořena.", type: "success" });
+        updateToast(toastId, {
+          message: isEditing ? "Osoba byla uložena." : "Osoba byla vytvořena.",
+          type:    "success",
+        });
         navigate("/persons");
       })
       .catch(e => {
         const { message, validationErrors: ve } = parseApiError(e);
         if (ve) {
+          // Backend vrátil mapu chyb polí (HTTP 400) – zobrazíme inline u každého pole
           setValidationErrors(ve);
           setError("Formulář obsahuje chyby. Zkontrolujte vyplněná pole.");
           updateToast(toastId, { message: "Formulář obsahuje chyby.", type: "error" });
           setTimeout(() => focusFirstError(ve), 100);
         } else {
+          // Business chyba (HTTP 422) nebo síťová chyba – zobrazíme obecnou zprávu
           setError(message);
           updateToast(toastId, { message, type: "error" });
         }
@@ -127,7 +141,7 @@ const PersonForm = () => {
       });
   };
 
-  const fe = (field) => validationErrors[field] || null;
+  const fieldError = (field) => validationErrors[field] || null;
 
   if (fetchLoading)
     return <div className="loading-spinner"><div className="spinner" />Načítám osobu...</div>;
@@ -154,14 +168,13 @@ const PersonForm = () => {
             <div className="form-grid">
               <Field label="Jméno / Firma" required placeholder="Název firmy nebo jméno"
                 value={person.name} onChange={handleChange("name")}
-                fieldError={fe("name")} fieldRef={getRef("name")} />
+                fieldError={fieldError("name")} fieldRef={getRef("name")} />
               <Field label="IČO" required placeholder="12345678"
                 value={person.identificationNumber} onChange={handleChange("identificationNumber")}
-                fieldError={fe("identificationNumber")} fieldRef={getRef("identificationNumber")} />
+                fieldError={fieldError("identificationNumber")} fieldRef={getRef("identificationNumber")} />
               <Field label="DIČ" placeholder="CZ12345678"
                 value={person.taxNumber || ""} onChange={handleChange("taxNumber")}
-                fieldError={fe("taxNumber")} fieldRef={getRef("taxNumber")} />
-              {/* Kategorie osoby */}
+                fieldError={fieldError("taxNumber")} fieldRef={getRef("taxNumber")} />
               <div className="form-group">
                 <label className="form-label">Kategorie</label>
                 <select
@@ -183,14 +196,14 @@ const PersonForm = () => {
             <div className="form-grid">
               <Field label="Číslo účtu" placeholder="123456789"
                 value={person.accountNumber || ""} onChange={handleChange("accountNumber")}
-                fieldError={fe("accountNumber")} fieldRef={getRef("accountNumber")} />
+                fieldError={fieldError("accountNumber")} fieldRef={getRef("accountNumber")} />
               <Field label="Kód banky" placeholder="0300"
                 value={person.bankCode || ""} onChange={handleChange("bankCode")}
-                fieldError={fe("bankCode")} fieldRef={getRef("bankCode")} />
+                fieldError={fieldError("bankCode")} fieldRef={getRef("bankCode")} />
               <div style={{ gridColumn: "1 / -1" }}>
                 <Field label="IBAN" placeholder="CZ6508000000192000145399"
                   value={person.iban || ""} onChange={handleChange("iban")}
-                  fieldError={fe("iban")} fieldRef={getRef("iban")} />
+                  fieldError={fieldError("iban")} fieldRef={getRef("iban")} />
               </div>
             </div>
           </div>
@@ -200,10 +213,10 @@ const PersonForm = () => {
             <div className="form-grid">
               <Field label="Telefon" placeholder="+420 123 456 789"
                 value={person.telephone || ""} onChange={handleChange("telephone")}
-                fieldError={fe("telephone")} fieldRef={getRef("telephone")} />
+                fieldError={fieldError("telephone")} fieldRef={getRef("telephone")} />
               <Field label="E-mail" type="email" placeholder="info@firma.cz"
                 value={person.mail || ""} onChange={handleChange("mail")}
-                fieldError={fe("mail")} fieldRef={getRef("mail")} />
+                fieldError={fieldError("mail")} fieldRef={getRef("mail")} />
             </div>
           </div>
 
@@ -212,17 +225,17 @@ const PersonForm = () => {
             <div className="form-grid">
               <Field label="Ulice" placeholder="Náměstí míru 1"
                 value={person.street || ""} onChange={handleChange("street")}
-                fieldError={fe("street")} fieldRef={getRef("street")} />
+                fieldError={fieldError("street")} fieldRef={getRef("street")} />
               <Field label="Město" placeholder="Praha"
                 value={person.city || ""} onChange={handleChange("city")}
-                fieldError={fe("city")} fieldRef={getRef("city")} />
+                fieldError={fieldError("city")} fieldRef={getRef("city")} />
               <Field label="PSČ" placeholder="110 00"
                 value={person.zip || ""} onChange={handleChange("zip")}
-                fieldError={fe("zip")} fieldRef={getRef("zip")} />
+                fieldError={fieldError("zip")} fieldRef={getRef("zip")} />
               <CountrySelect
                 value={person.country}
                 onChange={handleCountryChange}
-                fieldError={fe("country")}
+                fieldError={fieldError("country")}
               />
             </div>
           </div>

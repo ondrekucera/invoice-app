@@ -15,6 +15,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class InvoiceDTO {
 
+    // Pole "_id" zachovává kompatibilitu s frontendem (React používá _id jako identifikátor)
     @JsonProperty("_id")
     private Long id;
 
@@ -39,6 +40,7 @@ public class InvoiceDTO {
 
     private String note;
 
+    // Buyer a seller jsou vnořené DTO – při validaci stačí @NotNull, detailní kontrola probíhá v service
     @NotNull(message = "Kupující je povinný.")
     private PersonDTO buyer;
 

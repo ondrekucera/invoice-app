@@ -10,6 +10,9 @@ public interface InvoiceService {
 
     InvoiceDTO addInvoice(InvoiceDTO invoiceDTO);
 
+    /** Vytvoří více faktur najednou. Pro každou fakturu se spouští plná business validace. */
+    List<InvoiceDTO> addInvoicesBulk(List<InvoiceDTO> invoiceDTOs);
+
     InvoiceDTO getInvoiceById(long id);
 
     List<InvoiceDTO> getAll(InvoiceFilterDTO filter);

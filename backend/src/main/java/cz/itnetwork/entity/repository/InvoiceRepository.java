@@ -22,14 +22,21 @@ public interface InvoiceRepository extends JpaRepository<InvoiceEntity, Long>,
     @Query("SELECT COALESCE(SUM(i.price), 0) FROM InvoiceEntity i")
     long sumAllPrices();
 
-    // Součet s DPH – použijeme bezpečné přetypování přes double
+    /**
+     * Vrátí součet cen včetně DPH jako double.
+     * Používá výpočet (price * (1 + vat/100)) přímo v SQL – bezpečné přes double,
+     * výsledek se zaokrouhlí na celé Kč v service vrstvě.
+     */
     @Query("SELECT COALESCE(SUM(i.price * (1.0 + i.vat / 100.0)), 0) FROM InvoiceEntity i")
     double sumAllPricesWithVatRaw();
 
     @Query("SELECT COUNT(i) FROM InvoiceEntity i WHERE i.dueDate < :today")
     long countOverdue(@Param("today") LocalDate today);
 
-    // Počet faktur v daném měsíci – přes BETWEEN, bez YEAR()/MONTH()
+    /**
+     * Počítá faktury vystavené v daném měsíci.
+     * Používá BETWEEN s LocalDate místo YEAR()/MONTH() – přenositelné mezi DB dialekty.
+     */
     @Query("SELECT COUNT(i) FROM InvoiceEntity i WHERE i.issued >= :from AND i.issued <= :to")
     long countInPeriod(@Param("from") LocalDate from, @Param("to") LocalDate to);
 

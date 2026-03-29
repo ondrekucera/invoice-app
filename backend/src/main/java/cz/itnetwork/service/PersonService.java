@@ -10,6 +10,9 @@ public interface PersonService {
 
     PersonDTO addPerson(PersonDTO personDTO);
 
+    /** Vytvoří více osob najednou. Vrátí seznam uložených DTO se přidělenými ID. */
+    List<PersonDTO> addPersonsBulk(List<PersonDTO> personDTOs);
+
     void removePerson(long id);
 
     List<PersonDTO> getAll(PersonFilterDTO filter);

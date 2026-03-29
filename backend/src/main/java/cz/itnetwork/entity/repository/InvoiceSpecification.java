@@ -11,9 +11,19 @@ import java.util.List;
 
 public class InvoiceSpecification {
 
+    /**
+     * Sestaví JPA Specification pro filtrování faktur.
+     * Každý filtr je volitelný – null hodnoty jsou přeskočeny.
+     * Výsledná podmínka je AND spojení všech aktivních filtrů.
+     */
     public static Specification<InvoiceEntity> filterBy(InvoiceFilterDTO filter) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+
+            if (filter == null) {
+                // Žádný filtr – vrátíme všechny záznamy
+                return cb.conjunction();
+            }
 
             if (filter.getBuyerId() != null) {
                 predicates.add(cb.equal(root.get("buyer").get("id"), filter.getBuyerId()));
@@ -22,8 +32,11 @@ public class InvoiceSpecification {
                 predicates.add(cb.equal(root.get("seller").get("id"), filter.getSellerId()));
             }
             if (filter.getProduct() != null && !filter.getProduct().isBlank()) {
-                predicates.add(cb.like(cb.lower(root.get("product")),
-                        "%" + filter.getProduct().toLowerCase() + "%"));
+                // Case-insensitive LIKE – hledá podřetězec kdekoliv v názvu produktu
+                predicates.add(cb.like(
+                        cb.lower(root.get("product")),
+                        "%" + filter.getProduct().toLowerCase() + "%"
+                ));
             }
             if (filter.getMinPrice() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("price"), filter.getMinPrice()));
@@ -31,25 +44,20 @@ public class InvoiceSpecification {
             if (filter.getMaxPrice() != null) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("price"), filter.getMaxPrice()));
             }
-
-            // Filtry v6 – datum vystavení
             if (filter.getIssuedFrom() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("issued"), filter.getIssuedFrom()));
             }
             if (filter.getIssuedTo() != null) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("issued"), filter.getIssuedTo()));
             }
-
-            // Filtry v6 – datum splatnosti
             if (filter.getDueFrom() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("dueDate"), filter.getDueFrom()));
             }
             if (filter.getDueTo() != null) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("dueDate"), filter.getDueTo()));
             }
-
-            // Filtr v6 – po splatnosti
             if (Boolean.TRUE.equals(filter.getOverdue())) {
+                // Faktura je po splatnosti, pokud dueDate < dnešní datum
                 predicates.add(cb.lessThan(root.get("dueDate"), LocalDate.now()));
             }
 

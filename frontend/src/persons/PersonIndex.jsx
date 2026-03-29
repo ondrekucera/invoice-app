@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { Search, X, Plus, Download } from "lucide-react";
+import { X, Plus, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { apiDelete, apiGet, parseApiError } from "../utils/api";
 import PersonTable from "./PersonTable";
@@ -7,6 +7,7 @@ import Pagination from "../components/Pagination";
 import { usePagination } from "../components/usePagination";
 import { useToast } from "../components/ToastContext";
 import SkeletonList from "../components/SkeletonList";
+import CustomSelect from "../components/CustomSelect";
 import { CATEGORY_LABELS } from "./PersonForm";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
@@ -14,12 +15,17 @@ const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
 const EMPTY_QUERY = { name: "", ico: "", city: "", category: "" };
 const DEBOUNCE_MS = 350;
 
+// Možnosti pro dropdown kategorie – prázdná volba + všechny kategorie
+const CATEGORY_OPTIONS = [
+  { value: "", label: "— Vše —" },
+  ...Object.entries(CATEGORY_LABELS).map(([val, label]) => ({ value: val, label })),
+];
+
 const PersonIndex = () => {
-  const [persons,    setPersons]    = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState(null);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [query,      setQuery]      = useState(EMPTY_QUERY);
+  const [persons,  setPersons]  = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState(null);
+  const [query,    setQuery]    = useState(EMPTY_QUERY);
   const { addToast } = useToast();
   const debounceRef  = useRef(null);
 
@@ -35,7 +41,12 @@ const PersonIndex = () => {
     if (activeQuery.category) params.category = activeQuery.category;
 
     apiGet("/api/persons", params)
-      .then(data => { setPersons(data); setLoading(false); })
+      .then(data => {
+        // Řadíme sestupně podle ID – nově vytvořené osoby jsou nahoře
+        const sorted = [...data].sort((a, b) => (b._id ?? 0) - (a._id ?? 0));
+        setPersons(sorted);
+        setLoading(false);
+      })
       .catch(e   => { setError(parseApiError(e).message); setLoading(false); });
   }, []);
 
@@ -45,7 +56,6 @@ const PersonIndex = () => {
     debounceRef.current = setTimeout(() => loadPersons(nextQuery), DEBOUNCE_MS);
   }, [loadPersons]);
 
-  // Úvodní načtení
   useEffect(() => {
     loadPersons(EMPTY_QUERY);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
@@ -53,14 +63,12 @@ const PersonIndex = () => {
 
   const deletePerson = async (id) => {
     const person = persons.find(p => p._id === id);
-    // Optimistic update
     setPersons(prev => prev.filter(item => item._id !== id));
     try {
       await apiDelete("/api/persons/" + id);
       addToast(`Osoba „${person?.name ?? id}" byla smazána.`, "success");
     } catch (e) {
-      // Rollback
-      setPersons(prev => [...prev, person].sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")));
+      setPersons(prev => [...prev, person].sort((a, b) => (b._id ?? 0) - (a._id ?? 0)));
       addToast(parseApiError(e).message, "error");
     }
   };
@@ -76,16 +84,19 @@ const PersonIndex = () => {
     scheduleLoad(nextQuery);
   };
 
+  // Handler pro CustomSelect (kategorie) – kompatibilní s handleQueryChange
+  const handleCategoryChange = (value) => {
+    const nextQuery = { ...query, category: value };
+    setQuery(nextQuery);
+    scheduleLoad(nextQuery);
+  };
+
   const handleReset = () => {
     setQuery(EMPTY_QUERY);
     loadPersons(EMPTY_QUERY);
   };
 
   const isFiltered = !!(query.name || query.ico || query.city || query.category);
-
-  const handleExport = () => {
-    window.open(`${API_URL}/api/export/persons/csv`, "_blank");
-  };
 
   return (
     <div>
@@ -97,17 +108,10 @@ const PersonIndex = () => {
         <div className="page-actions">
           <button
             className="btn-outline"
-            onClick={handleExport}
+            onClick={() => window.open(`${API_URL}/api/export/persons/csv`, "_blank")}
             title="Exportovat osoby jako CSV"
           >
             <Download size={14} /> Export CSV
-          </button>
-          <button
-            className={`btn-outline${filterOpen ? " btn-outline-active" : ""}`}
-            onClick={() => setFilterOpen(o => !o)}
-          >
-            <Search size={14} />
-            Hledat{isFiltered ? " ●" : ""}
           </button>
           <Link to="/persons/create" className="btn-primary">
             <Plus size={15} /> Nová osoba
@@ -115,64 +119,60 @@ const PersonIndex = () => {
         </div>
       </div>
 
-      {filterOpen && (
-        <div className="filter-bar">
-          <div className="filter-row">
-            <div className="form-group" style={{ margin: 0, flex: "2 1 180px" }}>
-              <label className="form-label">Jméno / Firma</label>
-              <input
-                className="form-input"
-                name="name"
-                placeholder="Hledat podle jména..."
-                value={query.name}
-                onChange={handleQueryChange}
-                autoFocus
-              />
-            </div>
-            <div className="form-group" style={{ margin: 0, flex: "1 1 120px" }}>
-              <label className="form-label">IČO</label>
-              <input
-                className="form-input"
-                name="ico"
-                placeholder="12345678"
-                value={query.ico}
-                onChange={handleQueryChange}
-              />
-            </div>
-            <div className="form-group" style={{ margin: 0, flex: "1 1 120px" }}>
-              <label className="form-label">Město</label>
-              <input
-                className="form-input"
-                name="city"
-                placeholder="Praha"
-                value={query.city}
-                onChange={handleQueryChange}
-              />
-            </div>
-            <div className="form-group" style={{ margin: 0, flex: "1 1 140px" }}>
-              <label className="form-label">Kategorie</label>
-              <select
-                className="form-input"
-                name="category"
-                value={query.category}
-                onChange={handleQueryChange}
-              >
-                <option value="">— Vše —</option>
-                {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
-                  <option key={val} value={val}>{label}</option>
-                ))}
-              </select>
-            </div>
+      {/* Filtrační panel je vždy viditelný – rychlý přístup bez rozklikávání */}
+      <div className="filter-bar">
+        <div className="filter-row">
+          <div className="form-group" style={{ margin: 0, flex: "2 1 180px" }}>
+            <label className="form-label">Jméno / Firma</label>
+            <input
+              className="form-input"
+              name="name"
+              placeholder="Hledat podle jména..."
+              value={query.name}
+              onChange={handleQueryChange}
+              autoComplete="off"
+            />
           </div>
-          {isFiltered && (
-            <div className="filter-row">
-              <button className="btn-outline" onClick={handleReset} style={{ marginLeft: "auto" }}>
-                <X size={14} /> Reset filtru
-              </button>
-            </div>
-          )}
+          <div className="form-group" style={{ margin: 0, flex: "1 1 120px" }}>
+            <label className="form-label">IČO</label>
+            <input
+              className="form-input"
+              name="ico"
+              placeholder="12345678"
+              value={query.ico}
+              onChange={handleQueryChange}
+            />
+          </div>
+          <div className="form-group" style={{ margin: 0, flex: "1 1 120px" }}>
+            <label className="form-label">Město</label>
+            <input
+              className="form-input"
+              name="city"
+              placeholder="Praha"
+              value={query.city}
+              onChange={handleQueryChange}
+            />
+          </div>
+          <div className="form-group" style={{ margin: 0, flex: "1 1 160px" }}>
+            <label className="form-label">Kategorie</label>
+            {/* CustomSelect místo nativního <select> – konzistentní dark glass styl */}
+            <CustomSelect
+              options={CATEGORY_OPTIONS}
+              value={query.category}
+              onChange={handleCategoryChange}
+              size="md"
+            />
+          </div>
         </div>
-      )}
+
+        {isFiltered && (
+          <div className="filter-row" style={{ justifyContent: "flex-end" }}>
+            <button className="btn-outline" onClick={handleReset}>
+              <X size={14} /> Reset filtru
+            </button>
+          </div>
+        )}
+      </div>
 
       {error && <div className="alert alert-danger">Chyba: {error}</div>}
 

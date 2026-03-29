@@ -15,9 +15,11 @@ public interface PersonRepository extends JpaRepository<PersonEntity, Long>,
     List<PersonEntity> findByHidden(boolean hidden);
 
     /**
-     * Obrat firem (jako prodávající) za dané období.
-     * Používá BETWEEN s LocalDate – přenositelné bez YEAR().
-     * Osoby bez faktur mají revenue = 0 (LEFT JOIN).
+     * Vrátí obrat osob (jako prodávající) za zadané období seřazený sestupně.
+     *
+     * LEFT JOIN zajišťuje, že osoby bez faktur mají revenue = 0 (nejsou vynechány).
+     * Podmínka (i.id IS NULL OR ...) zachovává osoby bez faktur i při filtrování období.
+     * Používá LocalDate BETWEEN místo YEAR()/MONTH() pro přenositelnost mezi DB dialekty.
      */
     @Query("""
         SELECT p.id, p.name, p.identificationNumber, COALESCE(SUM(i.price), 0)

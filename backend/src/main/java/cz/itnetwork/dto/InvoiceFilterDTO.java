@@ -16,7 +16,6 @@ public class InvoiceFilterDTO {
     private Long maxPrice;
     private Integer limit;
 
-    // Nové filtry v6
     private LocalDate issuedFrom;
     private LocalDate issuedTo;
     private LocalDate dueFrom;

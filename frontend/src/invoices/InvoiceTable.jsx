@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Eye, Pencil, Trash2, Plus, AlertTriangle } from "lucide-react";
 import { apiDelete, parseApiError } from "../utils/api";
 import { dateStringFormatter } from "../utils/dateStringFormatter";
+import { formatCurrency } from "../utils/formatCurrency";
 import ConfirmModal from "../components/ConfirmModal";
 import { useToast } from "../components/ToastContext";
 
@@ -13,14 +14,15 @@ const InvoiceTable = ({ items, totalFiltered, totalAll, isFiltered, onDelete, on
   const pendingItem = items.find(i => i._id === pendingDeleteId)
     ?? (pendingDeleteId ? { invoiceNumber: pendingDeleteId } : null);
 
-  const requestDelete = (id) => setPendingDeleteId(id);
+  const handleDeleteRequest = (id) => setPendingDeleteId(id);
+  const handleCancelDelete  = () => setPendingDeleteId(null);
 
   const handleConfirmDelete = () => {
-    const id = pendingDeleteId;
+    const id   = pendingDeleteId;
     const item = items.find(i => i._id === id);
     setPendingDeleteId(null);
 
-    // Optimistic update – okamžité odstranění z UI
+    // Optimistic update – remove from UI immediately, roll back on error
     if (onOptimisticDelete) onOptimisticDelete(id);
 
     apiDelete("/api/invoices/" + id)
@@ -29,15 +31,10 @@ const InvoiceTable = ({ items, totalFiltered, totalAll, isFiltered, onDelete, on
         if (onDelete) onDelete();
       })
       .catch(e => {
-        // Rollback – vrátí položku zpět
         if (onRollback) onRollback(item);
         addToast(parseApiError(e).message, "error");
       });
   };
-
-  const handleCancelDelete = () => setPendingDeleteId(null);
-
-  const fmt = (n) => Number(n).toLocaleString("cs-CZ");
 
   if (totalFiltered === 0) {
     return (
@@ -148,7 +145,7 @@ const InvoiceTable = ({ items, totalFiltered, totalAll, isFiltered, onDelete, on
                   : <span>{item.buyer?.name ?? "—"}</span>}
               </div>
 
-              <div className="invoice-price">{fmt(item.price)} Kč</div>
+              <div className="invoice-price">{formatCurrency(item.price)} Kč</div>
 
               <div className="invoice-actions">
                 {item._id && (
@@ -165,7 +162,7 @@ const InvoiceTable = ({ items, totalFiltered, totalAll, isFiltered, onDelete, on
                   <button
                     className="btn-icon danger"
                     title="Smazat fakturu"
-                    onClick={() => requestDelete(item._id)}
+                    onClick={() => handleDeleteRequest(item._id)}
                   >
                     <Trash2 size={14} />
                   </button>

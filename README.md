@@ -12,24 +12,11 @@
 
 ---
 
-## ✨ Klíčové vlastnosti
-
-- **Plný CRUD** pro faktury i osoby / firmy s vrstvenou Spring Boot architekturou
-- **Dynamické filtrování** na backendu přes JPA Specification (faktury i osoby)
-- **Export do CSV** — faktury i osoby s UTF-8 BOM pro správné otevření v MS Excel
-- **Statistiky a revenue přehled** — agregační JPQL dotazy, přehled tržeb osob podle roku
-- **Dvouúrovňová validace** — Bean Validation (HTTP 400) + doménová logika `BusinessException` (HTTP 422)
-- **Profesionální UX bez knihoven** — vlastní toast systém, optimistic updates, skeleton loading, custom formulářové komponenty
-- **Dark / light mode** persistovaný v `localStorage`, sbalitelný sidebar, mobilní drawer
-- **Unit testy** na service vrstvě (JUnit 5 + Mockito) i frontend komponentách (Vitest + Testing Library)
-
----
-
 ## O projektu
 
 **Okvion** je fullstack webová aplikace pro evidenci faktur a obchodních kontaktů. Pokrývá celý fakturační proces — od registrace osoby / firmy přes vytváření faktur, sledování splatnosti až po přehledné statistiky a správu smluvních stran.
 
-Vznikla jako portfoliový projekt v rámci kurzu **JAVA PRO developer** na [ITnetwork.cz](https://www.itnetwork.cz). Nad rámec zadání kurzu byl projekt výrazně rozšířen o vlastní design systém, pokročilý error handling, export dat, revenue analytiku a testování.
+Vznikla jako portfoliový projekt v rámci kurzu **JAVA PRO developer** na [ITnetwork.cz](https://www.itnetwork.cz). Nad rámec zadání kurzu byl projekt výrazně rozšířen o vlastní design systém, pokročilý error handling, UX komponenty a testování.
 
 ---
 
@@ -37,25 +24,22 @@ Vznikla jako portfoliový projekt v rámci kurzu **JAVA PRO developer** na [ITne
 
 ### 👤 Správa osob
 - Plný CRUD — vytvoření, úprava, smazání, detail
-- Eviduje jméno / firmu, IČO, DIČ, bankovní spojení, kontakt, adresu a kategorii
-- Filtrování na backendu přes JPA Specification (jméno, IČO, město, země, kategorie)
+- Eviduje jméno / firmu, IČO, DIČ, bankovní spojení, kontakt, adresu
+- Vyhledávání podle jména, IČO nebo města (lokální filtrace bez reload)
 - Stránkování — 10 / 25 / 50 položek na stránku
 - Přehled vystavených a přijatých faktur přímo z detailu osoby
-- Export evidence osob do CSV (UTF-8 BOM)
 
 ### 🧾 Správa faktur
 - Plný CRUD — vytvoření, úprava, smazání, detail
 - Přiřazení dodavatele a odběratele z evidence osob
 - Automatický výpočet ceny s DPH
 - Badge „Po splatnosti" — vizuální upozornění při prošlém datu splatnosti
-- Filtrování na backendu: produkt, minimální a maximální cena (JPA Specification)
+- Filtrování podle produktu, minimální a maximální ceny (JPA Specification)
 - Přepínání pohledů: Všechny / Vystavené / Přijaté s výběrem osoby
 - Stránkování — 10 / 25 / 50 položek na stránku
-- Export faktur do CSV (UTF-8 BOM)
 
-### 📊 Statistiky a analytika
+### 📊 Statistiky
 - Celkový počet faktur, součet a průměrná hodnota
-- Přehled tržeb osob podle roku (`/api/persons/statistics/revenue?year=`)
 - Data se počítají přímo na backendu pomocí JPQL agregačních dotazů
 - Přehled dostupný na dashboardu i jako samostatná stránka
 
@@ -86,11 +70,11 @@ invoice-app/
 │       │   └── mapper/               # MapStruct mappery (Entity ↔ DTO)
 │       ├── exception/                # Vlastní výjimky (BusinessException)
 │       ├── configuration/            # CORS konfigurace
-│       └── constant/                 # Výčtové typy (Countries, PersonCategory)
+│       └── constant/                 # Výčtové typy (Countries)
 │
 └── frontend/                         # React SPA
     └── src/
-        ├── pages/                    # HomePage (dashboard), SettingsPage
+        ├── pages/                    # HomePage (dashboard)
         ├── invoices/                 # InvoiceIndex, InvoiceDetail, InvoiceForm,
         │                             #   InvoiceTable, InvoiceStatistics
         ├── persons/                  # PersonIndex, PersonDetail, PersonForm,
@@ -142,7 +126,7 @@ HTTP Response       ← ErrorResponseDTO při chybě (timestamp, status, message
 | Java | 17 | Programovací jazyk |
 | Spring Boot | 3.1 | Aplikační framework, auto-konfigurace |
 | Spring Data JPA + Hibernate | — | ORM, DDL auto, lazy loading |
-| JPA Specification | — | Dynamické filtrování faktur i osob (AND podmínky) |
+| JPA Specification | — | Dynamické filtrování faktur (AND podmínky) |
 | MapStruct | 1.5 | Mapování Entity ↔ DTO bez boilerplate |
 | Lombok | 1.18 | Generování getterů, setterů, konstruktorů |
 | Bean Validation | — | Validace DTO (`@NotBlank`, `@Email`, `@DecimalMin`) |
@@ -217,38 +201,29 @@ Frontend běží na: **`http://localhost:3000`**
 
 > Backend musí být spuštěný dříve než frontend.
 
-### Konfigurace prostředí (frontend)
-
-Frontend čte URL backendu z proměnné prostředí. Soubor `.env` je přiložen v repozitáři:
-
-```env
-VITE_API_URL=http://localhost:8080
-```
-
-Pro jiné prostředí stačí upravit hodnotu v `.env` před spuštěním `npm run dev`.
-
 ### Testy
 
 ```bash
-# Backend
-cd backend && ./mvnw test
+# Backend unit testy
+cd backend
+./mvnw test
 
-# Frontend
-cd frontend && npm run test
+# Frontend testy
+cd frontend
+npm run test
 ```
 
 ---
 
-## REST API
+## API přehled
 
 | Metoda | Endpoint | Popis |
 |---|---|---|
-| `GET` | `/api/persons` | Seznam osob s filtrací (query params) |
+| `GET` | `/api/persons` | Seznam všech viditelných osob |
 | `GET` | `/api/persons/{id}` | Detail osoby |
 | `POST` | `/api/persons` | Vytvoření osoby |
 | `PUT` | `/api/persons/{id}` | Úprava osoby |
 | `DELETE` | `/api/persons/{id}` | Soft-delete osoby (hidden = true) |
-| `GET` | `/api/persons/statistics/revenue` | Tržby osob podle roku (`?year=`) |
 | `GET` | `/api/invoices` | Seznam faktur s filtrací (query params) |
 | `GET` | `/api/invoices/{id}` | Detail faktury |
 | `POST` | `/api/invoices` | Vytvoření faktury |
@@ -257,8 +232,6 @@ cd frontend && npm run test
 | `GET` | `/api/invoices/statistics` | Statistiky faktur |
 | `GET` | `/api/invoices/sales/{personId}` | Vystavené faktury osoby |
 | `GET` | `/api/invoices/purchases/{personId}` | Přijaté faktury osoby |
-| `GET` | `/api/export/persons/csv` | Export osob do CSV |
-| `GET` | `/api/export/invoices/csv` | Export faktur do CSV |
 
 Chybové odpovědi používají jednotnou strukturu `ErrorResponseDTO`:
 
@@ -378,7 +351,6 @@ Chybové odpovědi používají jednotnou strukturu `ErrorResponseDTO`:
 - DTO pattern s MapStruct — JPA entity nikdy neprocházejí přes HTTP vrstvu
 - `BusinessException` odlišena od technických výjimek — různé HTTP statusy (422 vs 500)
 - Vlastní `ErrorResponseDTO` se sjednocenou strukturou pro všechny typy chyb
-- JPA Specification použita jak pro faktury, tak pro osoby — konzistentní přístup k filtrování
 
 ### Reusable komponenty
 - `usePagination` hook — stránkování s automatickou korekcí stránky po smazání záznamu
@@ -411,11 +383,9 @@ Chybové odpovědi používají jednotnou strukturu `ErrorResponseDTO`:
 - **Bean Validation** — validační anotace na DTO vrstvě, aktivace přes `@Valid` v controllerech
 - **Business validace** — `BusinessException` pro doménové chyby vs. `EntityNotFoundException` pro 404
 - **Sjednocený error response** — `ErrorResponseDTO` s `timestamp`, `status`, `message`, `path`, `validationErrors`
-- **JPA Specification** — dynamická filtrace faktur i osob bez pevně napsaných JPQL dotazů
+- **JPA Specification** — dynamická filtrace faktur bez pevně napsaných JPQL dotazů
 - **Soft-delete** — osoby se nesmažou fyzicky, ale nastaví se `hidden = true`
 - **Aggregate dotazy** — statistiky přes `@Query` (COUNT, SUM) místo načítání všech entit do paměti
-- **Revenue přehled** — JPQL join dotaz pro výpočet tržeb osob za zvolený rok
-- **CSV export** — `ExportController` generuje soubory s UTF-8 BOM pro kompatibilitu s MS Excel
 - **Unit testy** — Mockito pro izolaci service vrstvy od databáze
 
 ### Frontend
@@ -432,8 +402,8 @@ Chybové odpovědi používají jednotnou strukturu `ErrorResponseDTO`:
 
 ## Možná budoucí rozšíření
 
-- Autentizace a autorizace (Spring Security, JWT)
 - Export faktur do PDF
+- Autentizace a autorizace (Spring Security, JWT)
 - Emailové notifikace při blížící se splatnosti
 - Vícejazyčné rozhraní (i18n)
 - Rozšíření evidence zemí
@@ -450,5 +420,5 @@ Chybové odpovědi používají jednotnou strukturu `ErrorResponseDTO`:
 ---
 
 <div align="center">
-  <sub>🟣 Okvion v6.10 &nbsp;·&nbsp; Java 17 · Spring Boot 3.1 · React 18 · Vite 6 · MySQL</sub>
+  <sub>🟣 Okvion v5.11 &nbsp;·&nbsp; Java 17 · Spring Boot 3.1 · React 18 · Vite 6 · MySQL</sub>
 </div>

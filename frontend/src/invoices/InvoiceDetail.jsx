@@ -3,16 +3,18 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { Pencil, ArrowLeft, Trash2, AlertTriangle } from "lucide-react";
 import { apiGet, apiDelete, parseApiError, getErrorMessage } from "../utils/api";
 import { dateStringFormatter } from "../utils/dateStringFormatter";
+import { formatCurrency } from "../utils/formatCurrency";
 import ConfirmModal from "../components/ConfirmModal";
 import { useToast } from "../components/ToastContext";
 
 const InvoiceDetail = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id }       = useParams();
+  const navigate     = useNavigate();
   const { addToast } = useToast();
-  const [invoice, setInvoice]         = useState({ buyer: {}, seller: {} });
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState(null);
+
+  const [invoice,     setInvoice]     = useState({ buyer: {}, seller: {} });
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
@@ -22,6 +24,7 @@ const InvoiceDetail = () => {
   }, [id]);
 
   const handleDeleteRequest = () => setConfirmOpen(true);
+  const handleCancelDelete  = () => setConfirmOpen(false);
 
   const handleConfirmDelete = () => {
     setConfirmOpen(false);
@@ -30,18 +33,14 @@ const InvoiceDetail = () => {
         addToast(`Faktura #${invoice.invoiceNumber} byla smazána.`, "success");
         navigate("/invoices");
       })
-      .catch(e => {
-        addToast(parseApiError(e).message, "error");
-      });
+      .catch(e => addToast(parseApiError(e).message, "error"));
   };
-
-  const handleCancelDelete = () => setConfirmOpen(false);
-
-  const fmt = (n) => Number(n).toLocaleString("cs-CZ");
 
   const isDueDatePast = invoice.dueDate
     ? new Date(invoice.dueDate) < new Date()
     : false;
+
+  const priceWithVat = Math.round(invoice.price * (1 + invoice.vat / 100));
 
   if (loading)
     return <div className="loading-spinner"><div className="spinner" />Načítám fakturu...</div>;
@@ -115,13 +114,15 @@ const InvoiceDetail = () => {
             <div>
               <div className="stat-label" style={{ marginBottom: "0.2rem" }}>Cena bez DPH</div>
               <div style={{ fontSize: "2rem", fontWeight: 800, color: "#fff" }}>
-                {fmt(invoice.price)} Kč
+                {formatCurrency(invoice.price)} Kč
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <div className="stat-label" style={{ marginBottom: "0.2rem" }}>Cena s DPH ({invoice.vat} %)</div>
+              <div className="stat-label" style={{ marginBottom: "0.2rem" }}>
+                Cena s DPH ({invoice.vat} %)
+              </div>
               <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "rgba(255,255,255,0.75)" }}>
-                {fmt(Math.round(invoice.price * (1 + invoice.vat / 100)))} Kč
+                {formatCurrency(priceWithVat)} Kč
               </div>
             </div>
           </div>

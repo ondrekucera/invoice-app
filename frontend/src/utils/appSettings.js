@@ -6,6 +6,10 @@ const DEFAULTS = {
   timeFormat: "24h",
 };
 
+/**
+ * Načte uživatelská nastavení z localStorage.
+ * Při parse chybě (poškozený JSON) tiše vrátí výchozí hodnoty.
+ */
 export const getSettings = () => {
   try {
     const stored = localStorage.getItem(SETTINGS_KEY);
@@ -15,6 +19,7 @@ export const getSettings = () => {
   }
 };
 
+/** Sloučí nová nastavení s existujícími a uloží je. Vrátí aktualizovaný objekt. */
 export const saveSettings = (partial) => {
   const current = getSettings();
   const updated = { ...current, ...partial };
@@ -22,4 +27,5 @@ export const saveSettings = (partial) => {
   return updated;
 };
 
+/** Zkratka pro čtení jedné hodnoty nastavení. */
 export const getSetting = (key) => getSettings()[key];
