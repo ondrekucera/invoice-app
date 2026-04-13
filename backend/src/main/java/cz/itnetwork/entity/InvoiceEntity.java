@@ -16,7 +16,10 @@ public class InvoiceEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int invoiceNumber;
+    // Wrapper typy (Integer/Long) místo primitivů – Jackson dokáže deserializovat null/prázdný string
+    // bez MismatchedInputException. NOT NULL constraint v DB zajistí @Column(nullable = false).
+    @Column(nullable = false)
+    private Integer invoiceNumber;
 
     private LocalDate issued;
 
@@ -24,9 +27,11 @@ public class InvoiceEntity {
 
     private String product;
 
-    private long price;
+    @Column(nullable = false)
+    private Long price;
 
-    private int vat;
+    @Column(nullable = false)
+    private Integer vat;
 
     private String note;
 

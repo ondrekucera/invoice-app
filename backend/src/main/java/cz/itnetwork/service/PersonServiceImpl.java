@@ -11,12 +11,16 @@ import cz.itnetwork.exception.BusinessException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// Class-level @Transactional – všechny public metody běží v transakci.
+// Read-only metody přepisují default pomocí readOnly = true (optimalizace: Hibernate nespouští dirty checking).
 @Service
+@Transactional
 public class PersonServiceImpl implements PersonService {
 
     private final PersonMapper personMapper;
@@ -64,6 +68,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PersonDTO> getAll(PersonFilterDTO filter) {
         Specification<PersonEntity> spec = PersonSpecification.filterBy(filter);
         return personRepository.findAll(spec)
@@ -73,6 +78,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PersonDTO getPersonById(long id) {
         return personMapper.toDTO(fetchPersonById(id));
     }
@@ -90,6 +96,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PersonRevenueDTO> getRevenueByYear(int year) {
         LocalDate from = LocalDate.of(year, 1, 1);
         LocalDate to   = LocalDate.of(year, 12, 31);

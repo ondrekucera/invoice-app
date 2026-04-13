@@ -14,12 +14,16 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// Class-level @Transactional – všechny public metody běží v transakci.
+// Read-only metody přepisují default pomocí readOnly = true (optimalizace: Hibernate nespouští dirty checking).
 @Service
+@Transactional
 public class InvoiceServiceImpl implements InvoiceService {
 
     private final InvoiceMapper invoiceMapper;
@@ -65,11 +69,13 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public InvoiceDTO getInvoiceById(long id) {
         return invoiceMapper.toDTO(fetchInvoiceById(id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<InvoiceDTO> getAll(InvoiceFilterDTO filter) {
         Specification<InvoiceEntity> spec = InvoiceSpecification.filterBy(filter);
 
@@ -87,6 +93,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<InvoiceDTO> getSalesByPersonId(long personId) {
         return invoiceRepository.findBySellerId(personId)
                 .stream()
@@ -95,6 +102,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<InvoiceDTO> getPurchasesByPersonId(long personId) {
         return invoiceRepository.findByBuyerId(personId)
                 .stream()
@@ -127,6 +135,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public StatisticsDTO getStatistics() {
         LocalDate today     = LocalDate.now();
         LocalDate monthFrom = today.withDayOfMonth(1);
