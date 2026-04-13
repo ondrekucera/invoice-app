@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { Search, X, Plus, User, Download } from "lucide-react";
 import { apiGet, getErrorMessage } from "../utils/api";
 import InvoiceTable from "./InvoiceTable";
@@ -26,6 +26,53 @@ const EMPTY_FILTERS = {
   overdue:    false,
 };
 
+// Seznam klíčů, které synchronizujeme s URL – musí odpovídat EMPTY_FILTERS
+const FILTER_KEYS = Object.keys(EMPTY_FILTERS);
+
+/**
+ * Přečte hodnoty filtrů z URLSearchParams.
+ * - Prázdné / chybějící parametry nahrazuje výchozími hodnotami z EMPTY_FILTERS
+ * - `overdue` převádí ze stringu na boolean
+ */
+const parseFiltersFromUrl = (searchParams) => {
+  const result = { ...EMPTY_FILTERS };
+  for (const key of FILTER_KEYS) {
+    const value = searchParams.get(key);
+    if (value === null) continue;
+    if (key === "overdue") {
+      result[key] = value === "true";
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+};
+
+/**
+ * Vrátí true, pokud dvě sady filtrů mají stejné hodnoty.
+ * Slouží k zabránění zbytečných URL updatů (jinak hrozí nekonečná smyčka
+ * mezi useEffect → setSearchParams → změna URL → useEffect).
+ */
+const filtersEqual = (a, b) =>
+  FILTER_KEYS.every((key) => a[key] === b[key]);
+
+/**
+ * Převede filtry na objekt pro URLSearchParams – vynechá prázdné hodnoty
+ * a `overdue=false`, aby URL zůstala čistá.
+ */
+const filtersToUrlParams = (filters) => {
+  const params = {};
+  for (const key of FILTER_KEYS) {
+    const value = filters[key];
+    if (key === "overdue") {
+      if (value === true) params[key] = "true";
+    } else if (value !== "" && value != null) {
+      params[key] = String(value);
+    }
+  }
+  return params;
+};
+
 const PAGE_TITLE_BY_TYPE = {
   sales:     "Vystavené faktury",
   purchases: "Přijaté faktury",
@@ -33,6 +80,7 @@ const PAGE_TITLE_BY_TYPE = {
 
 const InvoiceIndex = ({ type }) => {
   const { personId: urlPersonId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [persons,        setPersons]        = useState([]);
   const [personSearch,   setPersonSearch]   = useState("");
@@ -43,7 +91,7 @@ const InvoiceIndex = ({ type }) => {
   const [loading,        setLoading]        = useState(true);
   const [error,          setError]          = useState(null);
   const [filterOpen,     setFilterOpen]     = useState(false);
-  const [filters,        setFilters]        = useState(EMPTY_FILTERS);
+  const [filters,        setFilters]        = useState(() => parseFiltersFromUrl(searchParams));
   const [personsOpen,    setPersonsOpen]    = useState(false);
   const personSearchRef  = useRef(null);
   const personDropRef    = useRef(null);
@@ -89,6 +137,34 @@ const InvoiceIndex = ({ type }) => {
       apiGet("/api/persons").then(setPersons).catch(() => {});
     }
   }, [isPersonContext]);
+
+  // Sync URL → filters: když se změní query parametry (např. zpětné tlačítko
+  // nebo příchozí link z /invoices?overdue=true), přepočítáme filter state.
+  // Porovnání hodnot zabrání nekonečné smyčce s opačným efektem níže.
+  useEffect(() => {
+    const nextFilters = parseFiltersFromUrl(searchParams);
+    setFilters((prev) => (filtersEqual(prev, nextFilters) ? prev : nextFilters));
+  }, [searchParams]);
+
+  // Sync filters → URL: při změně filter state zapíšeme hodnoty do URL.
+  // Aktivní pouze v tabu "all" – sales/purchases mají vlastní endpoint bez filtrů,
+  // URL by tam byla matoucí.
+  // Porovnání současného a nového URL zabrání zbytečným historyentrům i smyčce.
+  useEffect(() => {
+    if (activeTab !== "all") return;
+    const nextParams = filtersToUrlParams(filters);
+    const currentParams = Object.fromEntries(searchParams.entries());
+    // Ignorujeme parametry mimo FILTER_KEYS, abychom je neomylem nesmazali
+    const currentFilterParams = Object.fromEntries(
+      Object.entries(currentParams).filter(([k]) => FILTER_KEYS.includes(k))
+    );
+    const sameKeys =
+      Object.keys(nextParams).length === Object.keys(currentFilterParams).length &&
+      Object.entries(nextParams).every(([k, v]) => currentFilterParams[k] === v);
+    if (!sameKeys) {
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [filters, activeTab, searchParams, setSearchParams]);
 
   // Zavřít person dropdown při kliknutí mimo
   useEffect(() => {
@@ -164,6 +240,10 @@ const InvoiceIndex = ({ type }) => {
     setFilters(EMPTY_FILTERS);
     setFilterOpen(false);
     setInvoiceSearch("");
+    // Při odchodu z tabu "all" vyčistíme URL, abychom neponechali zastaralé filter parametry
+    if (tab !== "all") {
+      setSearchParams({}, { replace: true });
+    }
   };
 
   const handlePersonSelect = (person) => {
