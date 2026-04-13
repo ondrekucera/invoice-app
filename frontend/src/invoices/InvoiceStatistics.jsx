@@ -11,7 +11,8 @@ import { formatCurrency } from "../utils/formatCurrency";
 const InvoiceStatistics = () => {
   const [statistics,   setStatistics]   = useState(null);
   const [revenue,      setRevenue]      = useState(null);
-  const [revenueYear,  setRevenueYear]  = useState(new Date().getFullYear() - 1);
+  // Default na aktuální rok – uživatel typicky chce vidět nejnovější obrat.
+  const [revenueYear,  setRevenueYear]  = useState(new Date().getFullYear());
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState(null);
   const [revLoading,   setRevLoading]   = useState(true);

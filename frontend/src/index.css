@@ -394,9 +394,9 @@ a { text-decoration: none; color: inherit; }
 }
 
 .sidebar.collapsed .link-label {
-  opacity: 0;
-  width: 0;
-  overflow: hidden;
+  /* display:none místo opacity:0 – nezbytné, aby flex justify-content:center
+     skutečně centroval ikonu (element s opacity:0 stále zabírá místo ve flex layoutu) */
+  display: none;
 }
 
 .sidebar-footer {
@@ -2257,6 +2257,18 @@ select.form-input option { background: var(--bg-card); color: var(--color-text);
   color: #fff;
   font-weight: 600;
   box-shadow: 0 2px 10px var(--color-primary-glow);
+}
+
+.settings-toggle-btn.coming-soon {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-coming-soon-badge {
+  font-size: 0.75em;
+  font-weight: 400;
+  opacity: 0.7;
+  margin-left: 0.25rem;
 }
 
 /* =============================================

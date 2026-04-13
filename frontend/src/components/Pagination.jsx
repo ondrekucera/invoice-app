@@ -3,6 +3,7 @@ import CustomSelect from "./CustomSelect";
 
 const PAGE_SIZE_OPTIONS = [
   { value: 10, label: "10" },
+  { value: 15, label: "15" },
   { value: 25, label: "25" },
   { value: 50, label: "50" },
 ];
@@ -18,15 +19,18 @@ const Pagination = ({ total, page, pageSize, onPage, onPageSize }) => {
         <span className="pagination-range">
           {total === 0 ? "Žádné záznamy" : `Zobrazeno ${from}–${to} z ${total}`}
         </span>
-        <label className="pagination-size-label">
-          Na stránku:
+        {/* Pozn.: Wrapper musí být <div>, nikoli <label>. Label kolem CustomSelect
+            (button) způsobuje v Chrome/Brave, že synthetic click event z labelu
+            zruší onClick handler na buttonu a dropdown se neotevře. */}
+        <div className="pagination-size-label">
+          <span>Na stránku:</span>
           <CustomSelect
             options={PAGE_SIZE_OPTIONS}
             value={pageSize}
             onChange={(v) => onPageSize(Number(v))}
             size="sm"
           />
-        </label>
+        </div>
       </div>
 
       {totalPages > 1 && (

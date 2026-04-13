@@ -101,7 +101,7 @@ Vznikla jako portfoliový projekt v rámci kurzu **JAVA PRO developer** na [ITne
 - Optimistic updates pro mazání — okamžitá reakce UI s rollbackem při chybě
 - Vlastní `ConfirmModal` — žádné `window.confirm` ani `alert` v celé aplikaci
 - Datum a čas v topbaru s volitelným formátem
-- Nastavení aplikace: téma, jazyk, formát data a formát času
+- Nastavení aplikace: téma, formát data a formát času (anglická lokalizace v roadmapě)
 
 ---
 
@@ -515,6 +515,8 @@ Stav filtrování v seznamu faktur je synchronizovaný s URL query parametry př
 
 Projekt je živý a plánuju pokračovat v rozšiřování. Následující body ukazují, kam se bude vyvíjet dál — zároveň reflektují produkční realitu, které si jsem vědom, ale která nebyla součástí zadání kurzu:
 
+- [ ] **Plnohodnotná i18n** — anglický překlad UI, validačních hlášek a systémových textů (česky / anglicky přepínač v Settings)
+- [ ] **Vizuální sjednocení DateInput** — vlastní kalendář ve stylu CountrySelect dropdown panelu (aktuálně používá fialový mini-kalendář, vizuálně inkonzistentní s ostatními dropdowny)
 - [ ] **Spring Security + JWT autentizace** — login, registrace, role-based access
 - [ ] **Multi-tenancy** — každý uživatel vidí pouze svoje osoby a faktury
 - [ ] **Optimistic locking** (`@Version`) — ochrana proti tichým přepisům při konkurentní editaci
