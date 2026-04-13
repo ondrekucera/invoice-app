@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -35,7 +36,7 @@ public class InvoiceDTO {
 
     @NotNull(message = "Cena je povinná.")
     @DecimalMin(value = "0.0", inclusive = true, message = "Cena nesmí být záporná.")
-    private Long price;
+    private BigDecimal price;
 
     @NotNull(message = "DPH je povinné.")
     @DecimalMin(value = "0.0", inclusive = true, message = "DPH nesmí být záporné.")

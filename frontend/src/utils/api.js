@@ -1,5 +1,5 @@
 // API URL se načítá z .env souboru – viz VITE_API_URL
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
+export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
 
 /**
  * Interní fetch wrapper. Zpracovává JSON odpovědi a při chybě vyhazuje ApiError.
@@ -19,7 +19,9 @@ const fetchData = async (url, requestOptions) => {
     if (requestOptions.method === "DELETE") {
         if (!response.ok) {
             let data = null;
-            try { data = await response.json(); } catch {}
+            try { data = await response.json(); } catch {
+                // Záměrně ignorujeme – 204 No Content nebo non-JSON response (např. DELETE bez body)
+            }
             throw new ApiError(data?.message || "Chyba při mazání.", data?.validationErrors || null, response.status);
         }
         return;

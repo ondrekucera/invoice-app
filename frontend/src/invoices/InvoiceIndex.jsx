@@ -1,13 +1,11 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { Search, X, Plus, User, Download } from "lucide-react";
-import { apiGet, getErrorMessage } from "../utils/api";
+import { apiGet, getErrorMessage, API_URL } from "../utils/api";
 import InvoiceTable from "./InvoiceTable";
 import Pagination from "../components/Pagination";
 import { usePagination } from "../components/usePagination";
 import SkeletonList from "../components/SkeletonList";
-
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
 
 const TABS = [
   { key: "all",       label: "Všechny" },
@@ -386,7 +384,7 @@ const InvoiceIndex = ({ type }) => {
               {personsOpen && personSearch && filteredPersons.length === 0 && (
                 <div className="person-search-dropdown">
                   <div className="person-search-empty">
-                    Žádná osoba nenalezena pro „{personSearch}"
+                    {`Žádná osoba nenalezena pro „${personSearch}"`}
                   </div>
                 </div>
               )}
@@ -546,7 +544,7 @@ const InvoiceIndex = ({ type }) => {
           <div className="empty-state-icon">🔍</div>
           <div className="empty-state-title">Žádné výsledky</div>
           <div className="empty-state-sub">
-            Pro hledání „{invoiceSearch}" nebyly nalezeny žádné faktury.
+            {`Pro hledání „${invoiceSearch}" nebyly nalezeny žádné faktury.`}
           </div>
           <button className="btn-outline" style={{ marginTop: "1rem" }} onClick={() => setInvoiceSearch("")}>
             <X size={13} /> Zrušit hledání

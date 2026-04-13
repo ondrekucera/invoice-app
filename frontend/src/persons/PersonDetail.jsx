@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Pencil, ArrowLeft, FileText, Trash2 } from "lucide-react";
 import { apiGet, apiDelete, parseApiError, getErrorMessage } from "../utils/api";
-import Country from "./Country";
 import ConfirmModal from "../components/ConfirmModal";
 import { useToast } from "../components/ToastContext";
-import { CATEGORY_LABELS } from "./PersonForm";
+import { CATEGORY_LABELS } from "./constants";
 
 const PersonDetail = () => {
   const { id } = useParams();

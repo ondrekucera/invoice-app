@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import { usePageTitle } from "./usePageTitle";
 import { getSetting } from "../utils/appSettings";

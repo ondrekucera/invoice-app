@@ -3,6 +3,7 @@ package cz.itnetwork.dto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -12,8 +13,8 @@ public class InvoiceFilterDTO {
     private Long buyerId;
     private Long sellerId;
     private String product;
-    private Long minPrice;
-    private Long maxPrice;
+    private BigDecimal minPrice;
+    private BigDecimal maxPrice;
     private Integer limit;
 
     private LocalDate issuedFrom;

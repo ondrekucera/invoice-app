@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -20,15 +21,14 @@ public interface InvoiceRepository extends JpaRepository<InvoiceEntity, Long>,
     long countAll();
 
     @Query("SELECT COALESCE(SUM(i.price), 0) FROM InvoiceEntity i")
-    long sumAllPrices();
+    BigDecimal sumAllPrices();
 
     /**
-     * Vrátí součet cen včetně DPH jako double.
-     * Používá výpočet (price * (1 + vat/100)) přímo v SQL – bezpečné přes double,
-     * výsledek se zaokrouhlí na celé Kč v service vrstvě.
+     * Vrátí součet cen včetně DPH jako BigDecimal.
+     * Používá výpočet (price * (1 + vat/100)) přímo v JPQL.
      */
     @Query("SELECT COALESCE(SUM(i.price * (1.0 + i.vat / 100.0)), 0) FROM InvoiceEntity i")
-    double sumAllPricesWithVatRaw();
+    BigDecimal sumAllPricesWithVat();
 
     @Query("SELECT COUNT(i) FROM InvoiceEntity i WHERE i.dueDate < :today")
     long countOverdue(@Param("today") LocalDate today);
@@ -41,5 +41,5 @@ public interface InvoiceRepository extends JpaRepository<InvoiceEntity, Long>,
     long countInPeriod(@Param("from") LocalDate from, @Param("to") LocalDate to);
 
     @Query("SELECT COALESCE(MAX(i.price), 0) FROM InvoiceEntity i")
-    long maxPrice();
+    BigDecimal maxPrice();
 }

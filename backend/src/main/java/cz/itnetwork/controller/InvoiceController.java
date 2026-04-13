@@ -4,16 +4,17 @@ import cz.itnetwork.dto.InvoiceDTO;
 import cz.itnetwork.dto.InvoiceFilterDTO;
 import cz.itnetwork.dto.StatisticsDTO;
 import cz.itnetwork.service.InvoiceService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/invoices")
+@Tag(name = "Faktury", description = "Správa faktur – vytváření, filtrování podle různých kritérií, agregované statistiky.")
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
@@ -26,47 +27,55 @@ public class InvoiceController {
      * Vrátí seznam faktur s volitelným filtrováním.
      * Parametr limit omezuje počet výsledků – vhodné pro widgety na dashboardu.
      */
+    @Operation(
+            summary = "Seznam faktur s filtrováním",
+            description = "Vrátí faktury s volitelnými filtry (osoby, cena, data, splatnost). Parametr limit omezuje výsledek – vhodné pro widgety."
+    )
     @GetMapping
-    public List<InvoiceDTO> getInvoices(
-            @RequestParam(required = false) Long buyerId,
-            @RequestParam(required = false) Long sellerId,
-            @RequestParam(required = false) String product,
-            @RequestParam(required = false) Long minPrice,
-            @RequestParam(required = false) Long maxPrice,
-            @RequestParam(required = false) Integer limit,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate issuedFrom,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate issuedTo,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dueFrom,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dueTo,
-            @RequestParam(required = false) Boolean overdue
-    ) {
-        InvoiceFilterDTO filter = buildFilter(
-                buyerId, sellerId, product, minPrice, maxPrice, limit,
-                issuedFrom, issuedTo, dueFrom, dueTo, overdue
-        );
+    public List<InvoiceDTO> getInvoices(@ModelAttribute InvoiceFilterDTO filter) {
         return invoiceService.getAll(filter);
     }
 
+    @Operation(
+            summary = "Agregované statistiky faktur",
+            description = "Vrátí celkový součet, průměrnou hodnotu, počet faktur, součet s DPH, počet po splatnosti, nejvyšší fakturu a počet faktur za aktuální měsíc."
+    )
     @GetMapping("/statistics")
     public StatisticsDTO getStatistics() {
         return invoiceService.getStatistics();
     }
 
+    @Operation(
+            summary = "Detail faktury podle ID",
+            description = "Vrátí fakturu s daným ID včetně informací o prodávajícím a kupujícím."
+    )
     @GetMapping("/{id}")
     public InvoiceDTO getInvoiceById(@PathVariable Long id) {
         return invoiceService.getInvoiceById(id);
     }
 
+    @Operation(
+            summary = "Vystavené faktury osoby",
+            description = "Vrátí všechny faktury, kde daná osoba figuruje jako prodávající."
+    )
     @GetMapping("/sales/{personId}")
     public List<InvoiceDTO> getSalesByPersonId(@PathVariable Long personId) {
         return invoiceService.getSalesByPersonId(personId);
     }
 
+    @Operation(
+            summary = "Přijaté faktury osoby",
+            description = "Vrátí všechny faktury, kde daná osoba figuruje jako kupující."
+    )
     @GetMapping("/purchases/{personId}")
     public List<InvoiceDTO> getPurchasesByPersonId(@PathVariable Long personId) {
         return invoiceService.getPurchasesByPersonId(personId);
     }
 
+    @Operation(
+            summary = "Vytvoření nové faktury",
+            description = "Vytvoří fakturu. Prodávající i kupující musí existovat. Datum splatnosti nesmí být před datem vystavení."
+    )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public InvoiceDTO addInvoice(@Valid @RequestBody InvoiceDTO invoiceDTO) {
@@ -79,44 +88,33 @@ public class InvoiceController {
      * Buyer a seller musí být existující osoby v DB (odkazujeme přes _id).
      * Pokud validace nebo lookup jakékoliv faktury selže, celý bulk se zastaví – žádná faktura se neuloží.
      */
+    @Operation(
+            summary = "Hromadné vytvoření faktur",
+            description = "Vytvoří více faktur v jedné transakci. Při selhání validace jedné faktury se celá dávka neuloží."
+    )
     @PostMapping("/bulk")
     @ResponseStatus(HttpStatus.CREATED)
     public List<InvoiceDTO> addInvoicesBulk(@Valid @RequestBody List<@Valid InvoiceDTO> invoiceDTOs) {
         return invoiceService.addInvoicesBulk(invoiceDTOs);
     }
 
+    @Operation(
+            summary = "Aktualizace faktury",
+            description = "Aktualizuje existující fakturu. Metadata jako ID a datum vytvoření zůstávají zachována."
+    )
     @PutMapping("/{id}")
     public InvoiceDTO updateInvoice(@PathVariable Long id, @Valid @RequestBody InvoiceDTO invoiceDTO) {
         return invoiceService.updateInvoice(id, invoiceDTO);
     }
 
+    @Operation(
+            summary = "Smazání faktury",
+            description = "Trvale odstraní fakturu z evidence."
+    )
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteInvoice(@PathVariable Long id) {
         invoiceService.deleteInvoice(id);
     }
 
-    // ── Private helpers ──────────────────────────────────────────────────────
-
-    /** Sestaví filtrační DTO z query parametrů endpointu. */
-    private InvoiceFilterDTO buildFilter(
-            Long buyerId, Long sellerId, String product,
-            Long minPrice, Long maxPrice, Integer limit,
-            LocalDate issuedFrom, LocalDate issuedTo,
-            LocalDate dueFrom, LocalDate dueTo, Boolean overdue
-    ) {
-        InvoiceFilterDTO filter = new InvoiceFilterDTO();
-        filter.setBuyerId(buyerId);
-        filter.setSellerId(sellerId);
-        filter.setProduct(product);
-        filter.setMinPrice(minPrice);
-        filter.setMaxPrice(maxPrice);
-        filter.setLimit(limit);
-        filter.setIssuedFrom(issuedFrom);
-        filter.setIssuedTo(issuedTo);
-        filter.setDueFrom(dueFrom);
-        filter.setDueTo(dueTo);
-        filter.setOverdue(overdue);
-        return filter;
-    }
 }

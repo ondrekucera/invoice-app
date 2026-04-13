@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -11,16 +13,15 @@ public class StatisticsDTO {
 
     private long invoiceCount;
 
-    private long invoicesSum;
+    private BigDecimal invoicesSum;
 
-    private long invoicesAverage;
+    private BigDecimal invoicesAverage;
 
-    // Nové pole v6
-    private long totalWithVat;
+    private BigDecimal totalWithVat;
 
     private long overdueCount;
 
     private long thisMonthCount;
 
-    private long highestInvoice;
+    private BigDecimal highestInvoice;
 }
