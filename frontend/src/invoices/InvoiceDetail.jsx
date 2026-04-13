@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Pencil, ArrowLeft, Trash2, AlertTriangle } from "lucide-react";
 import { apiGet, apiDelete, parseApiError, getErrorMessage } from "../utils/api";

@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, Pencil, Trash2, Plus, User } from "lucide-react";
 import ConfirmModal from "../components/ConfirmModal";
-import { CATEGORY_LABELS } from "./PersonForm";
+import { CATEGORY_LABELS } from "./constants";
 
 const PersonTable = ({ items, deletePerson, totalFiltered, totalAll, isFiltered }) => {
   const [pendingDeleteItem, setPendingDeleteItem] = useState(null);

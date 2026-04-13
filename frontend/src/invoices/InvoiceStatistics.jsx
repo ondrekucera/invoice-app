@@ -1,14 +1,12 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FileText, Hash, DollarSign, TrendingUp, Plus, ArrowLeft,
   RefreshCw, AlertCircle, CalendarDays, Trophy, Download, Building2,
   Zap,
 } from "lucide-react";
-import { apiGet, getErrorMessage } from "../utils/api";
+import { apiGet, getErrorMessage, API_URL } from "../utils/api";
 import { formatCurrency } from "../utils/formatCurrency";
-
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
 
 const InvoiceStatistics = () => {
   const [statistics,   setStatistics]   = useState(null);

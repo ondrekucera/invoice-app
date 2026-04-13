@@ -16,6 +16,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -141,15 +143,14 @@ public class InvoiceServiceImpl implements InvoiceService {
         LocalDate monthFrom = today.withDayOfMonth(1);
         LocalDate monthTo   = today.withDayOfMonth(today.lengthOfMonth());
 
-        long count          = invoiceRepository.countAll();
-        long sum            = invoiceRepository.sumAllPrices();
+        long count              = invoiceRepository.countAll();
+        BigDecimal sum          = invoiceRepository.sumAllPrices();
         // Průměr chráníme proti dělení nulou pro případ prázdné databáze
-        long average        = count > 0 ? sum / count : 0;
-        // SUM s DPH vrací double – zaokrouhlujeme na celé Kč
-        long totalWithVat   = Math.round(invoiceRepository.sumAllPricesWithVatRaw());
-        long overdueCount   = invoiceRepository.countOverdue(today);
-        long thisMonthCount = invoiceRepository.countInPeriod(monthFrom, monthTo);
-        long highestInvoice = invoiceRepository.maxPrice();
+        BigDecimal average      = count > 0 ? sum.divide(BigDecimal.valueOf(count), 2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+        BigDecimal totalWithVat = invoiceRepository.sumAllPricesWithVat().setScale(2, RoundingMode.HALF_UP);
+        long overdueCount       = invoiceRepository.countOverdue(today);
+        long thisMonthCount     = invoiceRepository.countInPeriod(monthFrom, monthTo);
+        BigDecimal highestInvoice = invoiceRepository.maxPrice();
 
         return new StatisticsDTO(count, sum, average, totalWithVat, overdueCount, thisMonthCount, highestInvoice);
     }
@@ -188,7 +189,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (invoiceDTO.getDueDate().isBefore(invoiceDTO.getIssued())) {
             throw new BusinessException("Datum splatnosti nesmí být před datem vystavení.");
         }
-        if (invoiceDTO.getPrice() < 0) {
+        if (invoiceDTO.getPrice().compareTo(BigDecimal.ZERO) < 0) {
             throw new BusinessException("Cena nesmí být záporná.");
         }
         if (invoiceDTO.getVat() < 0) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { Save, ArrowLeft } from "lucide-react";
 import { apiGet, apiPost, apiPut, parseApiError } from "../utils/api";
@@ -13,7 +13,6 @@ const FIELD_FOCUS_ORDER = ["invoiceNumber", "product", "issued", "dueDate", "pri
 const InvoiceForm = () => {
   const navigate  = useNavigate();
   const { id }    = useParams();
-  const isEditing = !!id;
   const { addToast, updateToast } = useToast();
   const { fieldRefs, getRef } = useFieldRefs();
 
@@ -24,7 +23,7 @@ const InvoiceForm = () => {
     buyer: { _id: "" }, seller: { _id: "" },
   });
   const [loading,          setLoading]          = useState(false);
-  const [fetchLoading,     setFetchLoading]     = useState(isEditing);
+  const [fetchLoading,     setFetchLoading]     = useState(!!id);
   const [error,            setError]            = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
 
@@ -32,7 +31,7 @@ const InvoiceForm = () => {
     // Načteme osoby pro selecty – chybu tiše ignorujeme, PersonSelect má vlastní fallback
     apiGet("/api/persons").then(setPersons).catch(() => {});
 
-    if (isEditing) {
+    if (id) {
       apiGet("/api/invoices/" + id)
         .then(data => {
           setInvoice({
@@ -117,18 +116,18 @@ const InvoiceForm = () => {
     setValidationErrors({});
 
     const toastId = addToast(
-      isEditing ? "Ukládám fakturu..." : "Vytvářím fakturu...",
+      id ? "Ukládám fakturu..." : "Vytvářím fakturu...",
       "loading"
     );
 
-    const request = isEditing
+    const request = id
       ? apiPut("/api/invoices/" + id, invoice)
       : apiPost("/api/invoices", invoice);
 
     request
       .then(() => {
         updateToast(toastId, {
-          message: isEditing ? "Faktura byla uložena." : "Faktura byla vytvořena.",
+          message: id ? "Faktura byla uložena." : "Faktura byla vytvořena.",
           type:    "success",
         });
         navigate("/invoices");
@@ -160,8 +159,8 @@ const InvoiceForm = () => {
       <div className="page-header">
         <div className="page-header-left">
           <div className="page-eyebrow">Faktury</div>
-          <h1 className="page-title">{isEditing ? "Upravit fakturu" : "Nová faktura"}</h1>
-          {isEditing && invoice.product && <div className="page-sub">{invoice.product}</div>}
+          <h1 className="page-title">{id ? "Upravit fakturu" : "Nová faktura"}</h1>
+          {id && invoice.product && <div className="page-sub">{invoice.product}</div>}
         </div>
         <Link to="/invoices" className="btn-outline"><ArrowLeft size={14} /> Zpět na faktury</Link>
       </div>
@@ -277,7 +276,7 @@ const InvoiceForm = () => {
           <div style={{ display: "flex", gap: "0.75rem" }}>
             <button type="submit" className="btn-primary" disabled={loading}>
               <Save size={15} />
-              {loading ? "Ukládám..." : (isEditing ? "Uložit změny" : "Vytvořit fakturu")}
+              {loading ? "Ukládám..." : (id ? "Uložit změny" : "Vytvořit fakturu")}
             </button>
             <Link to="/invoices" className="btn-outline">Zrušit</Link>
           </div>

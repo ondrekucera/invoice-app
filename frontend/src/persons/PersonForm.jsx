@@ -1,19 +1,11 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { Save, ArrowLeft } from "lucide-react";
 import { apiGet, apiPost, apiPut, parseApiError } from "../utils/api";
 import { useFieldRefs } from "../components/useFieldRefs";
 import CountrySelect from "../components/CountrySelect";
 import { useToast } from "../components/ToastContext";
-
-/** Maps category enum values to Czech labels for the select dropdown. */
-export const CATEGORY_LABELS = {
-  IT:        "IT",
-  MARKETING: "Marketing",
-  ZBOZI:     "Zboží",
-  VOZIDLA:   "Vozidla",
-  OSTATNI:   "Ostatní",
-};
+import { CATEGORY_LABELS } from "./constants";
 
 const FIELD_FOCUS_ORDER = [
   "name", "identificationNumber", "taxNumber", "accountNumber",

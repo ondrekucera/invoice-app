@@ -1,5 +1,3 @@
-import React from "react";
-
 // Skeleton pro seznam faktur / osob – imituje layout řádků
 const SkeletonRow = ({ cols = 5 }) => (
   <div className="skeleton-row">

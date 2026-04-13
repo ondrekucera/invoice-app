@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   FileText, Users, BarChart2, Plus, ArrowRight,
@@ -19,7 +19,7 @@ const HomePage = () => {
     setError(false);
     Promise.all([
       apiGet("/api/invoices/statistics"),
-      apiGet("/api/invoices"),
+      apiGet("/api/invoices", { limit: 5 }),
       apiGet("/api/persons"),
     ])
       .then(([s, inv, per]) => {

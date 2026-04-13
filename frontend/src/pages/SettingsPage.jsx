@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Globe, Calendar, Clock, Sun, Moon, Palette } from "lucide-react";
 import { getSettings, saveSettings } from "../utils/appSettings";
 

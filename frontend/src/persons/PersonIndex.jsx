@@ -1,16 +1,14 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { X, Plus, Download } from "lucide-react";
 import { Link } from "react-router-dom";
-import { apiDelete, apiGet, parseApiError } from "../utils/api";
+import { apiDelete, apiGet, parseApiError, API_URL } from "../utils/api";
 import PersonTable from "./PersonTable";
 import Pagination from "../components/Pagination";
 import { usePagination } from "../components/usePagination";
 import { useToast } from "../components/ToastContext";
 import SkeletonList from "../components/SkeletonList";
 import CustomSelect from "../components/CustomSelect";
-import { CATEGORY_LABELS } from "./PersonForm";
-
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
+import { CATEGORY_LABELS } from "./constants";
 
 const EMPTY_QUERY = { name: "", ico: "", city: "", category: "" };
 const DEBOUNCE_MS = 350;

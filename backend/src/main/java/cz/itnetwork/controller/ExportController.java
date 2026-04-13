@@ -6,6 +6,8 @@ import cz.itnetwork.dto.InvoiceFilterDTO;
 import cz.itnetwork.dto.PersonFilterDTO;
 import cz.itnetwork.service.InvoiceService;
 import cz.itnetwork.service.PersonService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/export")
+@Tag(name = "Export", description = "Export dat do CSV souborů kompatibilních s Microsoft Excel (UTF-8 BOM).")
 public class ExportController {
 
     /** UTF-8 BOM ensures correct encoding when opening in MS Excel. */
@@ -30,6 +33,10 @@ public class ExportController {
         this.invoiceService = invoiceService;
     }
 
+    @Operation(
+            summary = "Export osob do CSV",
+            description = "Stáhne seznam osob jako CSV soubor kódovaný v UTF-8 s BOM pro správné zobrazení diakritiky v Excelu."
+    )
     @GetMapping("/persons/csv")
     public ResponseEntity<byte[]> exportPersonsCsv() {
         List<PersonDTO> persons = personService.getAll(new PersonFilterDTO());
@@ -55,6 +62,10 @@ public class ExportController {
         return buildCsvResponse(csv.toString(), "osoby-" + LocalDate.now() + ".csv");
     }
 
+    @Operation(
+            summary = "Export faktur do CSV",
+            description = "Stáhne seznam faktur jako CSV soubor kódovaný v UTF-8 s BOM. Podporuje stejné filtry jako GET /api/invoices."
+    )
     @GetMapping("/invoices/csv")
     public ResponseEntity<byte[]> exportInvoicesCsv() {
         List<InvoiceDTO> invoices = invoiceService.getAll(new InvoiceFilterDTO());

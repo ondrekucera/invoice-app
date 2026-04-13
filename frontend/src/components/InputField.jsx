@@ -1,5 +1,3 @@
-import React from "react";
-
 export function InputField(props) {
   // podporované typy pro element input
   const INPUTS = ["text", "number", "date"];
