@@ -65,12 +65,20 @@ const SettingsPage = ({ theme, onThemeChange }) => {
             </div>
           </div>
           <div className="settings-toggle-group">
-            {[{ v: "cs", l: "Čeština" }, { v: "en", l: "English" }].map(opt => (
-              <button key={opt.v} type="button"
-                className={`settings-toggle-btn${settings.language === opt.v ? " active" : ""}`}
-                onClick={() => handleChange("language", opt.v)}
-              >{opt.l}</button>
-            ))}
+            {[{ v: "cs", l: "Čeština" }, { v: "en", l: "English" }].map(opt => {
+              const isComingSoon = opt.v === "en";
+              return (
+                <button key={opt.v} type="button"
+                  className={`settings-toggle-btn${settings.language === opt.v ? " active" : ""}${isComingSoon ? " coming-soon" : ""}`}
+                  onClick={() => !isComingSoon && handleChange("language", opt.v)}
+                  disabled={isComingSoon}
+                  title={isComingSoon ? "Připravujeme v další verzi" : undefined}
+                >
+                  {opt.l}
+                  {isComingSoon && <span className="settings-coming-soon-badge"> · Připravujeme</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
 
