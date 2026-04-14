@@ -7,6 +7,9 @@ import InvoiceIndex      from "../invoices/InvoiceIndex";
 import InvoiceDetail     from "../invoices/InvoiceDetail";
 import InvoiceForm       from "../invoices/InvoiceForm";
 import InvoiceStatistics from "../invoices/InvoiceStatistics";
+import ExpenseIndex  from "../expenses/ExpenseIndex";
+import ExpenseDetail from "../expenses/ExpenseDetail";
+import ExpenseForm   from "../expenses/ExpenseForm";
 import HomePage     from "../pages/HomePage";
 import SettingsPage from "../pages/SettingsPage";
 
@@ -26,6 +29,13 @@ export function AppRoutes({ theme, onThemeChange }) {
         <Route path="show/:id" element={<PersonDetail />} />
         <Route path="create"   element={<PersonForm />} />
         <Route path="edit/:id" element={<PersonForm />} />
+      </Route>
+
+      <Route path="/expenses">
+        <Route index           element={<ExpenseIndex />} />
+        <Route path="show/:id" element={<ExpenseDetail />} />
+        <Route path="create"   element={<ExpenseForm />} />
+        <Route path="edit/:id" element={<ExpenseForm />} />
       </Route>
 
       <Route path="/invoices">

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 import {
-  Users, BarChart2, Home, ChevronLeft, ChevronRight, Sun, Moon,
+  Users, BarChart2, Home, ChevronLeft, ChevronRight, Sun, Moon, Receipt,
 } from "lucide-react";
 
 import BrandLogo from "./components/BrandLogo";
@@ -52,6 +52,7 @@ export function App() {
             <SidebarLink to="/home"    icon={Home}  label="Přehled"  exact onClick={closeMobile} />
             <SidebarLink to="/persons" icon={Users} label="Osoby"         onClick={closeMobile} />
             <SidebarLinkInvoices onClick={closeMobile} />
+            <SidebarLink to="/expenses" icon={Receipt} label="Náklady" onClick={closeMobile} />
 
             <div className="sidebar-section-label sidebar-section-separator">Přehledy</div>
             <SidebarLink to="/invoices/statistics" icon={BarChart2} label="Statistiky" exact onClick={closeMobile} />

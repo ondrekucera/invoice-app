@@ -1,20 +1,31 @@
-# IntelliJ
-.idea
+# AI tools
+.claude/
+.cursor/
+
+# IDE
+.idea/
+.vscode/
 *.iml
 
-# Backend (Spring Boot)
-backend/target
-backend/*.class
+# Backend (Java / Maven)
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
 
-# Frontend (React)
-frontend/node_modules
-frontend/dist
+# Frontend (Node / Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
 
 # OS
 .DS_Store
+Thumbs.db
 
-# ENV
-frontend/.env.local
+# Logs
+*.log
 
-# Claude Code interní soubory
-.claude/
+# Env
+.env
+.env.local
